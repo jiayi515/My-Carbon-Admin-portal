@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PILOT · Contract flow prototype</title>
+  <link rel="stylesheet" href="assets/tokens.css" />
+  <link rel="stylesheet" href="assets/components.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; padding: 0; min-height: 100%; font-family: var(--font-family-sans); color: var(--color-text-primary); background: var(--color-bg-1); -webkit-font-smoothing: antialiased; }
+    *, *::before, *::after { box-sizing: border-box; }
+    .stage { max-width: 580px; margin: 0; padding: 40px 28px 120px 48px; }
+    @media (min-width: 1100px) { .stage { max-width: 720px; padding-left: 64px; } }
+    .stage__hdr { display: flex; align-items: flex-end; gap: 18px; margin-bottom: 8px; flex-wrap: wrap; }
+    .stage__title { font-size: 22px; font-weight: 600; letter-spacing: -0.015em; margin: 0; }
+    .stage__sub { color: var(--color-text-tertiary); font-size: 13px; margin: 0; }
+    .stage__crumb { font: 500 11px var(--font-family-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary); margin: 0 0 4px; }
+    .stage__cust { display: flex; align-items: center; gap: 12px; padding: 18px 20px; background: var(--color-bg-2); border: 1px solid var(--color-border-default); border-radius: 12px; box-shadow: var(--shadow-1); margin-top: 22px; }
+    .stage__cust-logo { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, oklch(58% 0.16 262), oklch(40% 0.14 262)); color: #fff; display: grid; place-items: center; font-weight: 700; letter-spacing: -0.01em; flex: none; }
+    .stage__cust-main { flex: 1; min-width: 0; }
+    .stage__cust-name { font-size: 16px; font-weight: 600; letter-spacing: -0.005em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .stage__cust-meta { font-size: 12.5px; color: var(--color-text-tertiary); margin-top: 2px; }
+
+    /* Info card */
+    .info-card { background: var(--color-bg-2); border: 1px solid var(--color-border-default); border-radius: 12px; box-shadow: var(--shadow-1); overflow: hidden; margin-top: 18px; }
+    .info-card__head { padding: 14px 20px; border-bottom: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .info-card__title { font-size: 14px; font-weight: 600; }
+
+    /* Contract row */
+    .crow { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--color-border-subtle); position: relative; }
+    .crow:last-child { border-bottom: 0; }
+    .crow__main { flex: 1; min-width: 0; }
+    .crow__title { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .crow__sub { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; line-height: 1.5; }
+    .crow__actions { display: flex; gap: 6px; align-items: center; }
+
+    /* Pick icon (shared with contract-assign) */
+    .pick-card__icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+    .pick-card__icon--isv { background: oklch(93% 0.05 265); color: var(--color-accent-700); }
+    .pick-card__icon--iso { background: oklch(96% 0.03 230); color: var(--color-info-700); }
+    .pick-card__icon--merchant { background: oklch(95% 0.04 190); color: oklch(48% 0.13 190); }
+    .pick-card__icon--distributor { background: oklch(96.5% 0.04 80); color: var(--color-warning-700); }
+
+    /* Iconbutton */
+    .iconbtn { width: 28px; height: 28px; border-radius: 6px; background: transparent; border: 0; color: var(--color-text-tertiary); cursor: pointer; display: grid; place-items: center; }
+    .iconbtn:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+
+    /* KV */
+    .kv { display: grid; grid-template-columns: 140px 1fr; row-gap: 10px; column-gap: 16px; font-size: 13px; margin: 0; }
+    .kv dt { color: var(--color-text-tertiary); font-weight: 500; }
+    .kv dd { margin: 0; color: var(--color-text-primary); }
+    .muted { color: var(--color-text-tertiary); }
+    .stack { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── PILOT-specific chip / banner styling ───────────────
+       PILOT (in-progress)  → indigo (sits between info/accent)
+       PILOT expired         → amber (same as ACTIVE-expired); hover tip is the only thing that differs */
+    .tds-badge--pilot {
+      background: oklch(95% 0.04 280);
+      color: oklch(40% 0.16 280);
+      border-color: oklch(80% 0.10 280 / 0.35);
+    }
+    .tds-badge--pilot-expired {
+      background: var(--color-warning-50);
+      color: var(--color-warning-700);
+      border-color: oklch(75% 0.13 80 / 0.35);
+      border-style: dashed;
+    }
+
+    /* Inline countdown pill — sits next to the status chip, single source
+       of truth for "days left". Color shifts: indigo → amber → red. */
+    .pilot-countdown {
+      display: inline-flex; align-items: center; gap: 4px;
+      font: 500 11.5px/1 var(--font-family-sans);
+      padding: 3px 8px; border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+      border: 1px solid; white-space: nowrap;
+    }
+    .pilot-countdown--active  { color: oklch(40% 0.16 280); background: oklch(96% 0.03 280); border-color: oklch(80% 0.10 280 / 0.35); }
+    .pilot-countdown--warning { color: var(--color-warning-700); background: var(--color-warning-50); border-color: oklch(75% 0.13 80 / 0.4); }
+    .pilot-countdown--expired { color: var(--color-error-700); background: var(--color-error-50); border-color: oklch(58% 0.20 25 / 0.35); }
+
+    /* Thin warning strip below the row — only for EXPIRED PILOT.
+       The "operators blocked" fact is the one urgent thing an admin can't
+       infer from the status chip + countdown alone. */
+    .crow-warn {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 6px; padding: 5px 10px;
+      font-size: 12px; line-height: 1.4;
+      background: var(--color-error-50); color: var(--color-error-700);
+      border: 1px solid oklch(58% 0.20 25 / 0.25); border-radius: 6px;
+    }
+    .crow-warn svg { flex: none; }
+
+    /* Converted-from-pilot historical strip on ACTIVE cards */
+    .pilot-trace {
+      display: flex; gap: 8px; align-items: center;
+      font-size: 11.5px; color: var(--color-text-tertiary); padding: 6px 10px;
+      background: var(--color-bg-3);
+      border-radius: 6px; margin-top: 6px; border: 1px dashed var(--color-border-subtle);
+      width: fit-content;
+    }
+    .pilot-trace svg { flex: none; opacity: 0.6; }
+    .pilot-trace b { color: var(--color-text-secondary); font-weight: 500; }
+
+    /* Tweaks panel */
+    .tweaks {
+      position: fixed; right: 24px; top: 24px; width: 260px;
+      background: var(--color-bg-2); border: 1px solid var(--color-border-default);
+      border-radius: 12px; box-shadow: var(--shadow-3); padding: 14px 16px;
+      font-size: 12.5px; z-index: 2000;
+    }
+    .tweaks h4 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-tertiary); font-weight: 600; }
+    .tweaks__group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+    .tweaks__group:last-child { margin-bottom: 0; }
+    .tweaks__group-lbl { font-size: 11px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+    .tweaks__btn { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--color-border-subtle); background: var(--color-bg-1); cursor: pointer; font: inherit; color: var(--color-text-primary); text-align: left; }
+    .tweaks__btn.is-on { border-color: var(--color-primary-500); background: var(--color-primary-50); color: var(--color-primary-700); font-weight: 500; }
+
+    /* Stepper for convert wizard */
+    .convert-steps { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; padding: 14px 16px; background: var(--color-bg-3); border-radius: 10px; }
+    .convert-step { display: flex; align-items: center; gap: 8px; }
+    .convert-step__dot { width: 24px; height: 24px; border-radius: 50%; background: var(--color-bg-1); color: var(--color-text-tertiary); display: grid; place-items: center; font-size: 11.5px; font-weight: 600; border: 1.5px solid var(--color-border-default); flex: none; }
+    .convert-step__lbl { font-size: 12px; color: var(--color-text-tertiary); font-weight: 500; }
+    .convert-step.is-active .convert-step__dot { background: var(--color-primary-700); color: #fff; border-color: var(--color-primary-700); }
+    .convert-step.is-active .convert-step__lbl { color: var(--color-text-primary); font-weight: 600; }
+    .convert-step.is-done .convert-step__dot { background: var(--color-success-50); color: var(--color-success-700); border-color: oklch(58% 0.14 152 / 0.3); }
+    .convert-step.is-done .convert-step__lbl { color: var(--color-text-secondary); }
+    .convert-step__bar { flex: 1; height: 1px; background: var(--color-border-default); }
+    .convert-step__bar.is-done { background: var(--color-success-500); opacity: 0.4; }
+
+    /* Convert step bodies */
+    .convert-warning {
+      display: flex; gap: 12px;
+      padding: 14px 16px; background: var(--color-warning-50);
+      border: 1px solid oklch(75% 0.13 80 / 0.3); border-radius: 10px;
+      color: var(--color-warning-700);
+    }
+    .convert-warning__icon { flex: none; }
+    .convert-warning__title { font-weight: 600; font-size: 13.5px; }
+    .convert-warning__body { font-size: 12.5px; line-height: 1.55; margin-top: 4px; color: oklch(36% 0.07 70); }
+    .convert-warning__body ul { margin: 6px 0 0 18px; padding: 0; }
+    .convert-warning__body li { margin: 2px 0; }
+
+    .convert-fee-row { display: grid; grid-template-columns: 200px 1fr 110px; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--color-border-subtle); background: var(--color-bg-2); }
+    .convert-fee-row + .convert-fee-row { margin-top: 6px; }
+    .convert-fee-row__lbl { font-size: 13px; font-weight: 500; }
+    .convert-fee-row__lbl small { display: block; color: var(--color-text-tertiary); font-weight: 400; font-size: 11.5px; margin-top: 2px; }
+    .convert-fee-row__input { display: flex; align-items: center; gap: 6px; }
+    .convert-fee-row__unit { font-size: 11.5px; color: var(--color-text-tertiary); font-family: var(--font-family-mono); white-space: nowrap; }
+    .convert-fee-row__pilot { font-size: 11.5px; color: oklch(40% 0.16 280); padding: 3px 8px; border-radius: 999px; background: oklch(95% 0.04 280); text-align: center; font-family: var(--font-family-mono); }
+
+    .convert-fee-row[data-dirty="true"] { border-color: var(--color-primary-500); background: var(--color-primary-50); }
+    .convert-fee-row[data-error="true"] { border-color: var(--color-error-500); background: var(--color-error-50); }
+    .convert-fee-row__hint { grid-column: 2 / -1; font-size: 11.5px; color: var(--color-error-700); margin-top: 4px; }
+
+    .diff-row { display: grid; grid-template-columns: 200px 1fr; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-border-subtle); font-size: 13px; align-items: center; }
+    .diff-row:last-child { border-bottom: 0; }
+    .diff-row__lbl { color: var(--color-text-secondary); font-weight: 500; font-size: 12.5px; }
+    .diff-row__val { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+    .diff-from { color: oklch(40% 0.16 280); background: oklch(95% 0.04 280); padding: 2px 8px; border-radius: 4px; font-family: var(--font-family-mono); font-size: 12px; }
+    .diff-to { color: var(--color-success-700); background: var(--color-success-50); padding: 2px 8px; border-radius: 4px; font-family: var(--font-family-mono); font-size: 12px; font-weight: 600; }
+    .diff-arrow { color: var(--color-text-tertiary); }
+
+    /* Floating tooltip (matches shared.jsx ContractBadge tip) */
+    .tds-floating-tip {
+      position: fixed; transform: translate(-50%, calc(-100% - 8px));
+      background: oklch(18% 0.01 280); color: #fff; font-size: 11.5px;
+      padding: 5px 10px; border-radius: 5px; box-shadow: var(--shadow-3);
+      pointer-events: none; z-index: 9999; white-space: nowrap;
+    }
+
+    /* Activity feed rows — left contract-type chip, right title/desc/meta stack */
+    .evt-row { display: flex; gap: 14px; padding: 12px 18px; border-bottom: 1px solid var(--color-border-subtle); align-items: flex-start; }
+    .evt-row:last-child { border-bottom: 0; }
+    .evt-row__main { flex: 1; min-width: 0; }
+    .evt-row__title { font-size: 13.5px; font-weight: 600; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .evt-row__type { font: 500 10px/1 var(--font-family-mono); padding: 2px 6px; border-radius: 4px; background: var(--color-bg-3); color: var(--color-text-tertiary); border: 1px solid var(--color-border-subtle); letter-spacing: 0.04em; }
+    .evt-row__desc { font-size: 12.5px; color: var(--color-text-secondary); margin-top: 4px; line-height: 1.5; }
+    .evt-row__meta { font: 500 11px var(--font-family-mono); color: var(--color-text-tertiary); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="shared.jsx"></script>
+  <script type="text/babel" src="pilot-prototype.jsx"></script>
+</body>
+</html>

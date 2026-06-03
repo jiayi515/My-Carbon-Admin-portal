@@ -1,0 +1,118 @@
+/* ─── Token aliases for the imported Devices module ─────────
+   The source devices.jsx references a shorthand token set
+   (--fg1/2/3, --bg2/3, --border-1/2, --accent, --success, …).
+   Bridge them to the TOMS Design System tokens defined in
+   tokens.css so the imported file renders without edits.   */
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  --fg1: var(--color-text-primary);
+  --fg2: var(--color-text-secondary);
+  --fg3: var(--color-text-tertiary);
+
+  --bg1: var(--color-bg-1);
+  --bg2: var(--color-bg-2);
+  --bg3: var(--color-bg-3);
+
+  --border-1: var(--color-border-subtle);
+  --border-2: var(--color-border-default);
+  --border-default: var(--color-border-default);
+
+  --bg-hover: var(--color-bg-hover);
+
+  --accent:      var(--color-primary-700);
+  --accent-soft: var(--color-primary-50);
+
+  --success:    var(--color-success-500);
+  --success-bg: var(--color-success-50);
+  --warning:    var(--color-warning-500);
+  --warning-bg: var(--color-warning-50);
+  --error:      var(--color-error-500);
+  --error-bg:   var(--color-error-50);
+  --info:       var(--color-info-500);
+  --info-bg:    var(--color-info-50);
+
+  --font-mono: var(--font-family-mono);
+}
+
+.overline {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.mono { font-family: var(--font-family-mono); font-variant-numeric: tabular-nums; }
+.num  { font-variant-numeric: tabular-nums; }
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.tds-pagination { display: inline-flex; gap: 2px; }
+.tds-pagination__page {
+  min-width: 28px; height: 28px; padding: 0 8px;
+  display: inline-grid; place-items: center;
+  font: 500 12px/1 var(--font-family-sans);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tds-pagination__page:hover { background: var(--color-bg-3); color: var(--color-text-primary); }
+.tds-pagination__page--active {
+  background: var(--color-primary-700); color: #fff;
+  border-color: var(--color-primary-700);
+}
+
+.table-wrap { width: 100%; overflow-x: auto; }
+
+/* ─── Host wrapper for the imported Devices screens ─────────
+   The source screens use `height:100%; overflow:hidden` to set
+   up an internal scrolling region; in this admin the outer
+   `.content` already handles scroll, so neutralize that. */
+.devices-host {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.devices-host > div[style] {
+  height: auto !important;
+  overflow: visible !important;
+  min-height: 100% !important;
+}
+.devices-host .table-wrap { overflow-x: auto; }
+
+/* ─── Read-only admin: hide all inline "Change…" affordances ─
+   The imported devices module exposes per-row edit pencils on
+   Monitoring tab (Security modules, System state, Settings…).
+   This admin is query-only — strip them out so the UI doesn't
+   advertise actions the operator can't perform. */
+.devices-host button[title^="Change \00B7"],
+.devices-host button[title^="Edit staged \00B7"] {
+  display: none !important;
+}
+
+/* ─── Layout classes from the imported project ───────────── */
+.page-content        { max-width: 1280px; margin: 0 auto; width: 100%; }
+.page-content--narrow{ max-width: 720px;  margin: 0 auto; width: 100%; }
+
+.device-basic        { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+.device-basic__row-3 { display: grid; gap: 14px;
+                       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.device-basic__row-2 { display: grid; gap: 14px;
+                       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+
+.av-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.av-notes-grid { display: grid; gap: 16px; }
+.av-notes-grid--split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 760px) {
+  .av-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .av-notes-grid--split { grid-template-columns: minmax(0, 1fr); }
+}
+
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes fade-in  { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes pop      { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+.a-spin { animation: spin 1s linear infinite; }
+.a-fade { animation: fade-in 250ms cubic-bezier(0.2, 0, 0.2, 1) both; }
+.a-pop  { animation: pop 450ms cubic-bezier(.34,1.56,.64,1) both; }

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TOMS · Customer Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;450;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tds/colors_and_type.css">
+  <link rel="stylesheet" href="tds/styles/components.css">
+  <style>
+    html, body { margin: 0; height: 100%; background: var(--color-bg-1); overflow: hidden;
+                 font-family: var(--font-family-sans); color: var(--color-text-primary);
+                 -webkit-font-smoothing: antialiased; }
+    *, *::before, *::after { box-sizing: border-box; }
+    #root { height: 100%; }
+    button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+    input, select, textarea { font: inherit; color: inherit; }
+    .mono { font-family: var(--font-family-mono); font-variant-numeric: tabular-nums; font-feature-settings: "zero", "ss01"; }
+    .num  { font-variant-numeric: tabular-nums; }
+    .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .carbon-root { height: 100%; width: 100%; display: flex; flex-direction: row; overflow: hidden;
+                   font-size: 14px; line-height: 1.5; letter-spacing: -0.005em;
+                   font-feature-settings: "ss01", "cv11"; }
+    .carbon-root ::-webkit-scrollbar { width: 8px; height: 8px; }
+    .carbon-root ::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 4px; }
+    .carbon-root ::-webkit-scrollbar-track { background: transparent; }
+    .carbon-root :focus-visible { outline: 2px solid var(--color-primary-500); outline-offset: 1px; border-radius: 4px; }
+    /* Inputs handle their own focus ring via .tds-input:focus-within — don't double up */
+    .carbon-root .tds-input__el:focus-visible,
+    .carbon-root .tds-input:focus-within .tds-input__el { outline: none; }
+
+    /* ─── Content widths ───────────────────────────────────────
+       Top/bottom chrome and table screens are full-bleed.
+       Two-column dashboards (overview, version detail) cap at 1280px.
+       Forms (settings, narrow editors) cap at 720px. All centered. */
+    .page-content        { max-width: 1280px; margin: 0 auto; width: 100%; }
+    .page-content--narrow{ max-width: 720px;  margin: 0 auto; width: 100%; }
+    /* Tables: full-width container, with a min-width on the table itself
+       so the browser triggers horizontal scrolling on narrow viewports */
+    .table-wrap          { width: 100%; overflow-x: auto; }
+    .table-wrap > table  { min-width: 920px; }
+
+    /* ─── Responsive layouts ──────────────────────────────────── */
+    .app-overview { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; }
+    .app-overview { max-width: 1280px; margin: 0 auto; width: 100%; }
+    /* Device detail body — full-width, with cards in a 3-col → 2-col →
+       1-col cascade that collapses gracefully on narrow viewports.
+       Row-3 (Device + Deployment + Network) takes ~280px min per card;
+       row-2 (System + Hardware posture) takes ~320px min per card. */
+    .device-basic         { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+    .device-basic__row-3  { display: grid; gap: 14px;
+                            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .device-basic__row-2  { display: grid; gap: 14px;
+                            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .av-stats     { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+    .av-notes-grid{ display: grid; gap: 16px; }
+    .av-notes-grid--split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    @media (max-width: 1100px) {
+      .app-overview { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 760px) {
+      .av-stats      { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .av-notes-grid--split { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    /* ─── Sample-Activation animations ─────────────────────────── */
+    @keyframes spin     { to { transform: rotate(360deg); } }
+    @keyframes fade-in  { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    @keyframes pop      { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+    @keyframes caret    { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    .a-spin  { animation: spin 1s linear infinite; }
+    .a-fade  { animation: fade-in 250ms var(--easing-standard) both; }
+    .a-pop   { animation: pop 450ms cubic-bezier(.34,1.56,.64,1) both; }
+    .a-caret { animation: caret 1s steps(1) infinite; }
+  </style>
+</head>
+<body data-theme="light">
+  <div id="root"></div>
+
+  <template id="__bundler_thumbnail" data-bg-color="#1b1f33">
+    <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+      <rect x="180" y="180" width="840" height="440" rx="28" fill="#2a3055"/>
+      <rect x="220" y="220" width="220" height="360" rx="10" fill="#1f2440"/>
+      <rect x="240" y="244" width="60" height="10" rx="3" fill="#a4adff"/>
+      <rect x="240" y="276" width="180" height="22" rx="6" fill="#3a426e"/>
+      <rect x="240" y="306" width="180" height="22" rx="6" fill="#4a5294"/>
+      <rect x="240" y="336" width="180" height="22" rx="6" fill="#3a426e"/>
+      <rect x="240" y="366" width="180" height="22" rx="6" fill="#3a426e"/>
+      <rect x="460" y="220" width="540" height="80" rx="10" fill="#3a426e"/>
+      <rect x="460" y="316" width="540" height="120" rx="10" fill="#4a5294"/>
+      <rect x="460" y="452" width="540" height="128" rx="10" fill="#3a426e"/>
+      <text x="600" y="690" text-anchor="middle" font-family="ui-monospace, monospace" font-size="38" fill="#a4adff" letter-spacing="0.18em">CARBON</text>
+    </svg>
+  </template>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="data.jsx"></script>
+  <script type="text/babel" src="shell.jsx"></script>
+  <script type="text/babel" src="screens.jsx"></script>
+  <script type="text/babel" src="subscribed.jsx"></script>
+  <script type="text/babel" src="modals.jsx"></script>
+  <script type="text/babel" src="rollout-modal.jsx"></script>
+  <script type="text/babel" src="wizard.jsx"></script>
+  <script type="text/babel" src="pull-wizard.jsx"></script>
+  <script type="text/babel" src="browse-pool.jsx"></script>
+  <script type="text/babel" src="invite.jsx"></script>
+  <script type="text/babel" src="merchants.jsx"></script>
+  <script type="text/babel" src="merchant-apps.jsx"></script>
+  <script type="text/babel" src="merchant-contracts.jsx"></script>
+  <script type="text/babel" src="devices.jsx"></script>
+  <script type="text/babel" src="tickets.jsx"></script>
+  <script type="text/babel" src="fault_code_kb.jsx"></script>
+  <script type="text/babel" src="workbench.jsx"></script>
+  <script type="text/babel" src="activate.jsx"></script>
+  <script type="text/babel" src="orders.jsx"></script>
+  <script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

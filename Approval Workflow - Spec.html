@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Approval workflow · Spec</title>
+<link rel="stylesheet" href="assets/tokens.css" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --maxw: 1180px; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--color-bg-3); color: var(--color-text-primary); font-family: var(--font-family-sans); -webkit-font-smoothing: antialiased; }
+
+  /* ── Page shell ────────────────────────────── */
+  .page { max-width: var(--maxw); margin: 0 auto; padding: 56px 32px 96px; }
+  .page > header { margin-bottom: 40px; }
+  .eyebrow { font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-tertiary); font-weight: 600; }
+  h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin: 6px 0 10px; }
+  h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 6px; }
+  h3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.005em; }
+  p { line-height: 1.6; color: var(--color-text-secondary); margin: 0 0 8px; }
+  p.lead { font-size: 15px; max-width: 740px; }
+  .muted { color: var(--color-text-tertiary); }
+  hr.sep { border: 0; border-top: 1px solid var(--color-border-subtle); margin: 56px 0 40px; }
+
+  /* ── Section card ──────────────────────────── */
+  section.spec { margin: 0 0 40px; }
+  .spec__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .spec__num { font: 600 12px/1 var(--font-family-mono); color: var(--color-text-tertiary); letter-spacing: 0.06em; margin-bottom: 6px; }
+  .spec__intro { max-width: 720px; font-size: 14px; color: var(--color-text-secondary); line-height: 1.55; }
+  .canvas { background: var(--color-bg-2); border: 1px solid var(--color-border-default); border-radius: 12px; padding: 28px; box-shadow: var(--shadow-1); }
+  .canvas--tight { padding: 20px; }
+  .canvas--flush { padding: 0; overflow: hidden; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 880px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── Pills / badges ────────────────────────── */
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 500; line-height: 1.4; border: 1px solid transparent; white-space: nowrap; }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.8; }
+  .badge--neutral  { background: var(--color-bg-3); color: var(--color-text-secondary); border-color: var(--color-border-subtle); }
+  .badge--warning  { background: var(--color-warning-50); color: var(--color-warning-700); border-color: color-mix(in oklch, var(--color-warning-700) 22%, transparent); }
+  .badge--info     { background: var(--color-info-50); color: var(--color-info-700); border-color: color-mix(in oklch, var(--color-info-700) 22%, transparent); }
+  .badge--success  { background: var(--color-success-50); color: var(--color-success-700); border-color: color-mix(in oklch, var(--color-success-700) 22%, transparent); }
+  .badge--error    { background: var(--color-error-50); color: var(--color-error-700); border-color: color-mix(in oklch, var(--color-error-700) 22%, transparent); }
+  .badge--ghost    { background: transparent; color: var(--color-text-tertiary); border-color: var(--color-border-subtle); }
+  .badge--ghost::before { background: var(--color-text-tertiary); }
+
+  /* ── Buttons (visual only) ─────────────────── */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; border-radius: 6px; border: 1px solid transparent; cursor: pointer; line-height: 1.4; font-family: inherit; }
+  .btn--primary { background: var(--color-primary-700); color: #fff; box-shadow: var(--shadow-cta); }
+  .btn--ghost   { background: transparent; color: var(--color-text-primary); border-color: var(--color-border-default); }
+  .btn--danger  { background: var(--color-error-700); color: #fff; }
+  .btn--success { background: var(--color-success-700); color: #fff; }
+  .btn--sm { padding: 4px 9px; font-size: 12px; border-radius: 5px; }
+  .btn svg { width: 14px; height: 14px; }
+
+  /* ── State diagram ─────────────────────────── */
+  .state-diagram { padding: 24px 12px; }
+  .state-row { display: grid; grid-template-columns: 180px 36px 180px 36px 180px; align-items: center; justify-content: center; margin: 0 auto; width: max-content; }
+  .state-node { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 12px; background: var(--color-bg-2); border: 1px solid var(--color-border-default); border-radius: 10px; text-align: center; box-shadow: var(--shadow-1); }
+  .state-node small { font-size: 11px; color: var(--color-text-tertiary); }
+  .state-arrow { display: grid; place-items: center; color: var(--color-text-tertiary); position: relative; }
+  .state-arrow::after { content: ''; height: 1px; background: var(--color-border-default); width: 100%; }
+  .state-arrow svg { position: absolute; right: -4px; color: var(--color-text-tertiary); }
+  .state-arrow span { position: absolute; top: -16px; font-size: 11px; color: var(--color-text-tertiary); white-space: nowrap; }
+
+  .branches { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 28px; max-width: 760px; margin-left: auto; margin-right: auto; }
+  .branch { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px dashed var(--color-border-default); border-radius: 10px; background: var(--color-bg-3); }
+  .branch__from { font-size: 11px; color: var(--color-text-tertiary); }
+  .branch__when { font-size: 12.5px; color: var(--color-text-secondary); }
+
+  /* ── Status reference table ────────────────── */
+  table.statuses { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.statuses th { text-align: left; padding: 10px 14px; font-weight: 600; font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-tertiary); border-bottom: 1px solid var(--color-border-subtle); }
+  table.statuses td { padding: 14px; border-bottom: 1px solid var(--color-border-subtle); vertical-align: top; }
+  table.statuses tr:last-child td { border-bottom: 0; }
+  table.statuses td:nth-child(1) { width: 180px; }
+  table.statuses td:nth-child(2) { color: var(--color-text-secondary); }
+  table.statuses td:nth-child(3) { width: 200px; color: var(--color-text-tertiary); font-size: 12.5px; }
+
+  /* ── Mock window chrome ────────────────────── */
+  .mock { border: 1px solid var(--color-border-default); border-radius: 12px; background: var(--color-bg-1); overflow: hidden; box-shadow: var(--shadow-1); }
+  .mock__bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--color-bg-2); border-bottom: 1px solid var(--color-border-subtle); }
+  .mock__bar .dots { display: flex; gap: 5px; }
+  .mock__bar .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--color-bg-hover); display: block; }
+  .mock__path { font: 500 12px/1 var(--font-family-mono); color: var(--color-text-tertiary); }
+  .mock__body { padding: 0; }
+
+  /* ── Sidebar (mini) ────────────────────────── */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: 480px; }
+  .sb { background: var(--color-bg-3); border-right: 1px solid var(--color-border-subtle); padding: 14px 10px; }
+  .sb__brand { display: flex; align-items: center; gap: 8px; padding: 4px 8px 14px; }
+  .sb__logo { width: 22px; height: 22px; border-radius: 5px; background: var(--color-primary-700); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 11px; }
+  .sb__name { font-size: 13px; font-weight: 600; }
+  .sb__label { font-size: 10.5px; color: var(--color-text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 10px 4px; font-weight: 600; }
+  .sb__item { display: flex; align-items: center; gap: 9px; padding: 7px 10px; font-size: 13px; color: var(--color-text-secondary); border-radius: 6px; cursor: default; }
+  .sb__item svg { width: 15px; height: 15px; color: var(--color-text-tertiary); flex: none; }
+  .sb__item--active { background: var(--color-bg-2); color: var(--color-text-primary); box-shadow: var(--shadow-1); }
+  .sb__item--active svg { color: var(--color-primary-700); }
+  .sb__item--hi { position: relative; }
+  .sb__item--hi::after { content: ''; position: absolute; inset: -2px -4px; border: 1.5px dashed var(--color-primary-500); border-radius: 8px; pointer-events: none; }
+  .sb__count { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--color-error-700); color: #fff; font-size: 11px; font-weight: 600; display: grid; place-items: center; }
+
+  /* ── Approval Center body ──────────────────── */
+  .ac { padding: 22px 26px 28px; }
+  .ac__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  .ac__head h2 { margin: 0; }
+  .ac__sub { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+  .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--color-border-subtle); margin-bottom: 14px; }
+  .tab { padding: 10px 0; font-size: 13.5px; font-weight: 500; color: var(--color-text-secondary); border-bottom: 2px solid transparent; cursor: default; display: flex; align-items: center; gap: 6px; }
+  .tab--active { color: var(--color-text-primary); border-bottom-color: var(--color-primary-700); }
+  .tab .count { font-size: 11px; color: var(--color-text-tertiary); background: var(--color-bg-3); padding: 1px 6px; border-radius: 10px; }
+  .tab--active .count { background: var(--color-primary-700); color: #fff; }
+
+  /* Approval card list */
+  .alist { display: flex; flex-direction: column; gap: 10px; }
+  .acard { display: grid; grid-template-columns: 28px 1fr auto; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--color-border-subtle); border-radius: 10px; background: var(--color-bg-2); }
+  .acard__icon { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; background: var(--color-bg-3); color: var(--color-text-secondary); }
+  .acard__type { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-tertiary); font-weight: 600; }
+  .acard__title { font-size: 14px; font-weight: 600; margin-top: 2px; }
+  .acard__meta { display: flex; gap: 14px; margin-top: 6px; font-size: 12.5px; color: var(--color-text-secondary); flex-wrap: wrap; }
+  .acard__meta b { font-weight: 500; color: var(--color-text-primary); }
+  .acard__actions { display: flex; gap: 6px; align-items: center; }
+  .acard__time { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .acard__time .timer { font-size: 11.5px; color: var(--color-text-tertiary); display: flex; align-items: center; gap: 4px; }
+  .timer--urgent { color: var(--color-warning-700); }
+
+  /* ── Diff card ─────────────────────────────── */
+  .diff { display: grid; grid-template-columns: 1fr 32px 1fr; gap: 0; align-items: stretch; border: 1px solid var(--color-border-subtle); border-radius: 10px; overflow: hidden; }
+  .diff__pane { padding: 14px 16px; background: var(--color-bg-2); }
+  .diff__pane--old { background: var(--color-error-50); }
+  .diff__pane--new { background: var(--color-success-50); }
+  .diff__pane h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary); font-weight: 600; }
+  .diff__val { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .diff__sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .diff__arrow { display: grid; place-items: center; color: var(--color-text-tertiary); border-left: 1px solid var(--color-border-subtle); border-right: 1px solid var(--color-border-subtle); }
+
+  /* ── Avatar / person ───────────────────────── */
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary-500), var(--color-accent-600)); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 12.5px; flex: none; }
+  .avatar--sm { width: 22px; height: 22px; font-size: 10.5px; }
+  .avatar--lg { width: 44px; height: 44px; font-size: 16px; }
+
+  /* ── Forms (visual mock) ───────────────────── */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12.5px; font-weight: 500; color: var(--color-text-secondary); }
+  .field .input,
+  .field textarea,
+  .field select { font: inherit; padding: 8px 10px; border: 1px solid var(--color-border-default); border-radius: 6px; background: var(--color-bg-2); font-size: 13px; color: var(--color-text-primary); }
+  .field textarea { min-height: 70px; resize: vertical; }
+  .help { font-size: 11.5px; color: var(--color-text-tertiary); line-height: 1.5; }
+  .req { color: var(--color-error-700); }
+
+  /* ── Operator menu (mock) ──────────────────── */
+  .opmenu { width: 220px; background: var(--color-bg-2); border: 1px solid var(--color-border-default); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px oklch(0% 0 0 / 0.12); }
+  .opmenu__item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: 13px; color: var(--color-text-primary); border-radius: 5px; cursor: default; }
+  .opmenu__item svg { width: 14px; height: 14px; color: var(--color-text-tertiary); }
+  .opmenu__item .badge { margin-left: auto; }
+  .opmenu__item--danger { color: var(--color-error-700); }
+  .opmenu__item--new { background: color-mix(in oklch, var(--color-info-50) 70%, transparent); }
+  .opmenu__sep { height: 1px; background: var(--color-border-subtle); margin: 4px 6px; }
+
+  /* ── Disposition option cards (3 options) ───── */
+  .opt { padding: 18px; border: 1px solid var(--color-border-default); border-radius: 10px; background: var(--color-bg-2); display: flex; flex-direction: column; gap: 10px; position: relative; }
+  .opt--rec { border-color: var(--color-primary-700); border-width: 1.5px; }
+  .opt--rec::before { content: 'Recommended'; position: absolute; top: -10px; left: 14px; background: var(--color-primary-700); color: #fff; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
+  .opt h4 { margin: 0; font-size: 14.5px; font-weight: 600; }
+  .opt__sub { font-size: 12.5px; color: var(--color-text-tertiary); line-height: 1.55; }
+  .opt__viz { padding: 12px; background: var(--color-bg-3); border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+  .opt__pros, .opt__cons { font-size: 12.5px; line-height: 1.55; color: var(--color-text-secondary); }
+  .opt__pros li, .opt__cons li { margin-left: -8px; }
+  .opt__pros b, .opt__cons b { font-weight: 600; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-tertiary); display: block; margin-bottom: 4px; }
+  .opt__pros b { color: var(--color-success-700); }
+  .opt__cons b { color: var(--color-warning-700); }
+
+  /* ── Notification & audit list ─────────────── */
+  .audit { display: flex; flex-direction: column; gap: 0; }
+  .audit__row { display: grid; grid-template-columns: 22px 1fr auto; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--color-border-subtle); position: relative; }
+  .audit__row:last-child { border-bottom: 0; }
+  .audit__dot { width: 22px; display: grid; place-items: center; position: relative; }
+  .audit__dot::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 9px; height: 9px; border-radius: 50%; background: var(--color-bg-2); border: 2px solid var(--color-text-tertiary); }
+  .audit__dot--success::before { border-color: var(--color-success-700); background: var(--color-success-700); }
+  .audit__dot--error::before { border-color: var(--color-error-700); background: var(--color-error-700); }
+  .audit__dot--info::before { border-color: var(--color-info-700); background: var(--color-info-700); }
+  .audit__row:not(:last-child) .audit__dot::after { content: ''; position: absolute; top: calc(50% + 7px); left: 50%; transform: translateX(-50%); width: 2px; height: calc(50% + 14px); background: var(--color-border-subtle); }
+  .audit__title { font-size: 13.5px; font-weight: 500; }
+  .audit__sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .audit__time { font-size: 11.5px; color: var(--color-text-tertiary); white-space: nowrap; }
+
+  /* ── Quick legend at top ───────────────────── */
+  .scope { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+  .scope__card { padding: 14px 16px; background: var(--color-bg-2); border: 1px solid var(--color-border-subtle); border-radius: 10px; }
+  .scope__card h3 { margin: 0 0 4px; font-size: 13.5px; }
+  .scope__card p { font-size: 12.5px; margin: 0; }
+
+  .callout { padding: 12px 14px; border-radius: 8px; background: var(--color-info-50); border: 1px solid color-mix(in oklch, var(--color-info-700) 18%, transparent); font-size: 13px; color: var(--color-info-700); display: flex; gap: 10px; align-items: flex-start; }
+  .callout svg { flex: none; margin-top: 2px; }
+  .callout b { color: var(--color-text-primary); font-weight: 600; }
+
+  /* ── Small utilities ───────────────────────── */
+  .row { display: flex; align-items: center; gap: 10px; }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-20 { margin-top: 20px; }
+  .mt-24 { margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PAGE
+============================================================ -->
+<div class="page">
+
+<!-- ── Header ───────────────────────────────────────────── -->
+<header>
+  <div class="eyebrow">Carbon Admin Portal · Design spec</div>
+  <h1>Approval workflow</h1>
+  <p class="lead">
+    Sensitive operations on a customer's operators — <b>changing an Email</b> and
+    <b>granting / transferring the Admin role</b> — must pass a two-person review before they take effect.
+    This document covers the state machine, the new <b>Approval Center</b>, the submitter
+    and reviewer surfaces, and the disposition of the original Admin after a role transfer.
+  </p>
+
+  <div class="scope">
+    <div class="scope__card">
+      <h3>1 · Change Email</h3>
+      <p>Email is the recovery + login credential. After approval, the <b>new</b> email address must verify ownership before the swap takes effect.</p>
+    </div>
+    <div class="scope__card">
+      <h3>2 · Transfer / Grant Admin role</h3>
+      <p>Admin has full billing, fleet and operator permissions. Approval takes effect immediately and atomically (demote + promote in one step).</p>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     1 · STATE MACHINE
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">01 · STATES</div>
+      <h2>Lifecycle of an approval request</h2>
+      <p class="spec__intro">Every request travels the same backbone. <b>Change Email</b> adds one extra leg — the new mailbox must self-verify after the review passes.</p>
+    </div>
+  </div>
+
+  <div class="canvas state-diagram">
+    <div class="state-row">
+      <div class="state-node">
+        <span class="badge badge--warning">Pending review</span>
+        <small>Awaiting another Admin</small>
+      </div>
+      <div class="state-arrow"><span>approve</span>
+        <svg width="36" height="12" viewBox="0 0 36 12" fill="none"><path d="M2 6h28m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="state-node" id="state-approved">
+        <span class="badge badge--info">Approved</span>
+        <small>Awaiting effect</small>
+      </div>
+      <div class="state-arrow"><span>execute</span>
+        <svg width="36" height="12" viewBox="0 0 36 12" fill="none"><path d="M2 6h28m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="state-node">
+        <span class="badge badge--success">Applied</span>
+        <small>Change live</small>
+      </div>
+    </div>
+
+    <div class="branches">
+      <div class="branch">
+        <div class="branch__from">From <b>Pending review</b></div>
+        <span class="badge badge--error" style="align-self: flex-start">Rejected</span>
+        <div class="branch__when">Any other Admin clicks <i>Reject</i> with reason.</div>
+      </div>
+      <div class="branch">
+        <div class="branch__from">From <b>Pending review</b></div>
+        <span class="badge badge--neutral" style="align-self: flex-start">Withdrawn</span>
+        <div class="branch__when">Original submitter cancels before anyone decides.</div>
+      </div>
+      <div class="branch">
+        <div class="branch__from">From <b>Pending review</b></div>
+        <span class="badge badge--ghost" style="align-self: flex-start">Expired</span>
+        <div class="branch__when">No decision within 72 hours → auto-fail.</div>
+      </div>
+    </div>
+
+    <div class="callout mt-24" style="max-width: 760px; margin-left: auto; margin-right: auto;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <div>
+        <b>Email-change inserts one extra state</b> between <i>Approved</i> and <i>Applied</i>:
+        <span class="badge badge--info" style="margin: 0 4px;">Awaiting user verify</span>
+        — the new email address gets a 24h one-time link. If the user doesn't click in time, the request transitions to <span class="badge badge--ghost">Expired</span> instead of <i>Applied</i>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     2 · STATUS REFERENCE
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">02 · STATUS REFERENCE</div>
+      <h2>What each badge means</h2>
+      <p class="spec__intro">Used in the Approval Center list, the Operator row badge, and the Customer-detail banner.</p>
+    </div>
+  </div>
+
+  <div class="canvas canvas--flush">
+    <table class="statuses">
+      <thead>
+        <tr><th>Status</th><th>Meaning</th><th>Acted on by</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge--warning">Pending review</span></td>
+          <td>Submitted, sitting in the queue. Submitter can withdraw; any other Admin can decide.</td>
+          <td>Any other Admin</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge--info">Approved</span></td>
+          <td>Decision made. For Admin transfer this lasts a fraction of a second before becoming Applied. For Email change it pauses for user verification.</td>
+          <td>System</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge--info">Awaiting user verify</span></td>
+          <td>Email-change only. New mailbox has a 24h link to click.</td>
+          <td>Operator (target user)</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge--success">Applied</span></td>
+          <td>Change is live. Audit log entry exists. Cannot be reverted — a new approval is required to undo.</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge--error">Rejected</span></td>
+          <td>Reviewer declined. Reason is recorded and shown to the submitter.</td>
+          <td>Reviewer</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge--neutral">Withdrawn</span></td>
+          <td>Submitter cancelled before any decision was made.</td>
+          <td>Submitter</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge--ghost">Expired</span></td>
+          <td>72h without a decision (or 24h without user verification, for Email change).</td>
+          <td>System</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================
+     3 · SIDEBAR ENTRY
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">03 · NAVIGATION</div>
+      <h2>New top-level entry: <i>Approvals</i></h2>
+      <p class="spec__intro">Lives in the primary sidebar under <i>Operations</i>. A red-dot count shows pending items assigned to <b>any</b> Admin (anyone can approve).</p>
+    </div>
+  </div>
+
+  <div class="canvas canvas--flush">
+    <div class="layout">
+      <aside class="sb">
+        <div class="sb__brand">
+          <div class="sb__logo">C</div>
+          <div class="sb__name">Carbon Admin</div>
+        </div>
+        <div class="sb__label">Workspace</div>
+        <div class="sb__item">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8 8 3l6 5v6H2V8Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Dashboard
+        </div>
+        <div class="sb__item">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 6h6M5 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Customers
+        </div>
+        <div class="sb__item">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3l2 1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Devices
+        </div>
+        <div class="sb__label">Operations</div>
+        <div class="sb__item sb__item--active sb__item--hi">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="m3 8 3 3 7-7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Approvals
+          <span class="sb__count">3</span>
+        </div>
+        <div class="sb__item">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 6h6M5 9h6M5 12h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Audit log
+        </div>
+        <div class="sb__item">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 13c.6-2.5 2.7-4 5-4s4.4 1.5 5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Operators
+        </div>
+      </aside>
+
+      <div style="padding: 28px; background: var(--color-bg-1);">
+        <div class="muted" style="font-size: 12px; margin-bottom: 8px;">↖ New menu item</div>
+        <h3 style="margin: 0 0 4px;">Why a top-level entry, not a tab?</h3>
+        <p style="font-size: 13px; max-width: 520px;">
+          Approvals span <b>multiple customers</b> — a reviewer needs one inbox, not N tabs.
+          The Customer-detail page still shows a contextual banner when its own operators have pending changes, with a deep-link into the relevant request.
+        </p>
+        <div class="mt-16">
+          <span class="badge badge--error" style="font-size: 12px; padding: 4px 10px;">● 3 pending</span>
+          <span class="muted" style="font-size: 12px; margin-left: 8px;">Counts items the current Admin can act on (i.e. not their own submissions).</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     4 · APPROVAL CENTER PAGE
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">04 · APPROVAL CENTER</div>
+      <h2>Inbox of pending and historical requests</h2>
+      <p class="spec__intro">Two tabs: <b>To review</b> (everything the current Admin can act on) and <b>My requests</b> (what I submitted). Filters along the top, decision actions inline on each card.</p>
+    </div>
+  </div>
+
+  <div class="mock">
+    <div class="mock__bar">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="mock__path">carbon-admin / approvals</div>
+    </div>
+    <div class="ac">
+      <div class="ac__head">
+        <div>
+          <h2>Approvals</h2>
+          <div class="ac__sub">Two-person review for sensitive operator changes. <span class="muted">· You can approve any request except your own.</span></div>
+        </div>
+        <div class="row">
+          <button class="btn btn--ghost btn--sm">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Filters
+          </button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab tab--active">To review <span class="count">3</span></div>
+        <div class="tab">My requests <span class="count">2</span></div>
+        <div class="tab">History</div>
+      </div>
+
+      <div class="alist">
+        <!-- Card 1: Email change, urgent -->
+        <div class="acard">
+          <div class="acard__icon">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="m2.5 4.5 5.5 4 5.5-4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="acard__type">Change Email <span class="badge badge--warning" style="margin-left: 8px;">Pending review</span></div>
+            <div class="acard__title">Change email for <b>Maya Tan</b> on <b>Bluebird Logistics</b></div>
+            <div class="acard__meta">
+              <span><span class="muted">From</span> <b style="text-decoration: line-through; text-decoration-color: var(--color-error-700);">maya@bluebird.com</b></span>
+              <span><span class="muted">To</span> <b>maya.tan@bluebird.co</b></span>
+              <span><span class="muted">Submitted by</span> <b>Alex Wu</b> · 1h ago</span>
+            </div>
+          </div>
+          <div class="acard__time">
+            <span class="timer timer--urgent">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v3l2 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              71h left
+            </span>
+            <div class="acard__actions">
+              <button class="btn btn--ghost btn--sm">View</button>
+              <button class="btn btn--ghost btn--sm" style="color: var(--color-error-700);">Reject</button>
+              <button class="btn btn--success btn--sm">Approve</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Admin transfer -->
+        <div class="acard">
+          <div class="acard__icon">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8a5 5 0 0 1 9-3M13 8a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M12 3v2.5h-2.5M4 13v-2.5h2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="acard__type">Transfer Admin role <span class="badge badge--warning" style="margin-left: 8px;">Pending review</span></div>
+            <div class="acard__title">Transfer Admin on <b>Foundry Robotics</b></div>
+            <div class="acard__meta">
+              <span><span class="muted">From</span> <b>jamie@foundry.io</b></span>
+              <span><span class="muted">To</span> <b>priya@foundry.io</b></span>
+              <span><span class="muted">Submitted by</span> <b>Alex Wu</b> · 3h ago</span>
+            </div>
+          </div>
+          <div class="acard__time">
+            <span class="timer">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v3l2 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              69h left
+            </span>
+            <div class="acard__actions">
+              <button class="btn btn--ghost btn--sm">View</button>
+              <button class="btn btn--ghost btn--sm" style="color: var(--color-error-700);">Reject</button>
+              <button class="btn btn--success btn--sm">Approve</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Email change, awaiting user verify -->
+        <div class="acard">
+          <div class="acard__icon">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="m2.5 4.5 5.5 4 5.5-4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="acard__type">Change Email <span class="badge badge--info" style="margin-left: 8px;">Awaiting user verify</span></div>
+            <div class="acard__title">Change email for <b>Ren Kovac</b> on <b>Hex Manufacturing</b></div>
+            <div class="acard__meta">
+              <span><span class="muted">From</span> <b style="text-decoration: line-through; text-decoration-color: var(--color-error-700);">ren@hex.co</b></span>
+              <span><span class="muted">To</span> <b>ren.kovac@hex.co</b></span>
+              <span><span class="muted">Approved by</span> <b>Sara Lin</b> · 6h ago</span>
+            </div>
+          </div>
+          <div class="acard__time">
+            <span class="timer">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v3l2 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              user link 18h left
+            </span>
+            <div class="acard__actions">
+              <button class="btn btn--ghost btn--sm">View</button>
+              <button class="btn btn--ghost btn--sm">Resend link</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     5 · APPROVAL DETAIL & REVIEWER DECISION
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">05 · DETAIL & DECISION</div>
+      <h2>Reviewer view — diff, context, decision form</h2>
+      <p class="spec__intro">Clicking <i>View</i> opens a side drawer (or modal) with the full diff, submitter notes, and a required reason field for rejections.</p>
+    </div>
+  </div>
+
+  <div class="canvas">
+    <div style="max-width: 720px; margin: 0 auto;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+        <span class="badge badge--warning">Pending review</span>
+        <span class="muted" style="font-size: 12.5px;">REQ-A2F8 · created 1h ago · expires in 71h</span>
+      </div>
+
+      <h2 style="margin: 0 0 4px;">Change email — Maya Tan</h2>
+      <p style="font-size: 13.5px; margin-bottom: 18px;">
+        Operator on <b>Bluebird Logistics</b> · submitted by
+        <span class="avatar avatar--sm" style="display: inline-grid; vertical-align: -6px; margin: 0 4px;">A</span>
+        <b>Alex Wu</b>
+      </p>
+
+      <h3 style="margin: 18px 0 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary);">Change</h3>
+      <div class="diff">
+        <div class="diff__pane diff__pane--old">
+          <h4>Current</h4>
+          <div class="diff__val" style="text-decoration: line-through; text-decoration-color: color-mix(in oklch, var(--color-error-700) 50%, transparent);">maya@bluebird.com</div>
+          <div class="diff__sub">Verified · last login 2 days ago</div>
+        </div>
+        <div class="diff__arrow">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h12m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="diff__pane diff__pane--new">
+          <h4>Proposed</h4>
+          <div class="diff__val">maya.tan@bluebird.co</div>
+          <div class="diff__sub">Will need to verify ownership after approval</div>
+        </div>
+      </div>
+
+      <h3 style="margin: 22px 0 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary);">Submitter's reason</h3>
+      <div style="padding: 12px 14px; background: var(--color-bg-3); border-radius: 8px; font-size: 13px; line-height: 1.55; color: var(--color-text-secondary);">
+        Maya's company is migrating from .com to .co. Confirmed over the phone with her on 2026-05-25. New mailbox is already provisioned on their side.
+      </div>
+
+      <div class="mt-24" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="field">
+          <label>Decision reason <span class="muted">(required for reject, optional for approve)</span></label>
+          <textarea placeholder="Why you're approving or rejecting…"></textarea>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; justify-content: flex-end;">
+          <div class="callout" style="font-size: 12.5px;">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <span>Approving will send a verification link to <b>maya.tan@bluebird.co</b>. The change isn't live until she clicks it.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-16" style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="btn btn--ghost">Cancel</button>
+        <button class="btn btn--danger">
+          <svg viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Reject
+        </button>
+        <button class="btn btn--success">
+          <svg viewBox="0 0 16 16" fill="none"><path d="m3.5 8 3 3 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Approve
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     6 · SUBMITTER SIDE — operator menu + submit-for-review form
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">06 · SUBMITTER SIDE</div>
+      <h2>How requests get created</h2>
+      <p class="spec__intro">Two new entries appear in the Operator row's <code>⋯</code> menu. They no longer execute directly — they open a <i>Submit for review</i> form.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="canvas">
+      <h3>Operator action menu — updated</h3>
+      <p style="font-size: 13px;">Sensitive items are visually demarcated and tagged <span class="badge badge--info" style="font-size: 10.5px;">Needs review</span>. If a Pending change already exists for this operator, the matching entry becomes <i>disabled</i> with a "Pending review" tooltip.</p>
+
+      <div class="opmenu mt-16">
+        <div class="opmenu__item">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M11 5 6 10 4 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/></svg>
+          Reset password
+        </div>
+        <div class="opmenu__item">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 3.5 13 5v3.5c0 2.5-2 4.5-5 5-3-.5-5-2.5-5-5V5l5-1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Lock account
+        </div>
+        <div class="opmenu__sep"></div>
+        <div class="opmenu__item opmenu__item--new">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="m2.5 4.5 5.5 4 5.5-4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Change email
+          <span class="badge badge--info" style="font-size: 10px;">Needs review</span>
+        </div>
+        <div class="opmenu__item opmenu__item--new">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8a5 5 0 0 1 9-3M13 8a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M12 3v2.5h-2.5M4 13v-2.5h2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Transfer Admin role
+          <span class="badge badge--info" style="font-size: 10px;">Needs review</span>
+        </div>
+        <div class="opmenu__sep"></div>
+        <div class="opmenu__item opmenu__item--danger">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M4 5h8m-7 0 .5 8h5L11 5M6.5 5V3.5h3V5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Remove operator
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas">
+      <h3>Submit for review — form</h3>
+      <p style="font-size: 13px;">Opens as a modal. Submitter sees what will be reviewed and must provide a reason (≥ 10 chars).</p>
+
+      <div class="mt-16" style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--color-bg-3); border-radius: 8px;">
+          <span class="avatar">M</span>
+          <div>
+            <div style="font-size: 13px; font-weight: 600;">Maya Tan</div>
+            <div style="font-size: 12px; color: var(--color-text-tertiary);">Operator · Bluebird Logistics</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>New email <span class="req">*</span></label>
+          <input class="input" value="maya.tan@bluebird.co" />
+          <div class="help">A verification link will be sent to this address after approval. The change applies only after the link is clicked (24h window).</div>
+        </div>
+
+        <div class="field">
+          <label>Reason for change <span class="req">*</span></label>
+          <textarea placeholder="Explain why this change is needed. The reviewer will see this verbatim. (≥ 10 characters)">Maya's company is migrating from .com to .co. Confirmed over the phone on 2026-05-25.</textarea>
+        </div>
+
+        <div class="callout">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span>Another Admin must review this request. <b>You can't approve your own submission.</b> Expires in 72h.</span>
+        </div>
+
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+          <button class="btn btn--ghost">Cancel</button>
+          <button class="btn btn--primary">Submit for review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     7 · EMAIL CHANGE — FULL TIMELINE
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">07 · EMAIL CHANGE · TIMELINE</div>
+      <h2>End-to-end happy path</h2>
+      <p class="spec__intro">Five touchpoints from submission to live. Notification fanouts are listed inline.</p>
+    </div>
+  </div>
+
+  <div class="canvas">
+    <div class="audit" style="max-width: 720px;">
+      <div class="audit__row">
+        <div class="audit__dot audit__dot--info"></div>
+        <div>
+          <div class="audit__title">Alex Wu submitted change-email request</div>
+          <div class="audit__sub">maya@bluebird.com → maya.tan@bluebird.co · reason recorded</div>
+          <div class="audit__sub muted">📨 In-app + email → <b>all other Admins</b>, with "Review" deep link</div>
+        </div>
+        <div class="audit__time">May 26 · 14:02</div>
+      </div>
+
+      <div class="audit__row">
+        <div class="audit__dot audit__dot--info"></div>
+        <div>
+          <div class="audit__title">Sara Lin approved the request</div>
+          <div class="audit__sub">Decision note: "Confirmed with Maya by phone."</div>
+          <div class="audit__sub muted">📨 In-app + email → <b>Alex Wu</b> (submitter) + <b>maya.tan@bluebird.co</b> (verification link, 24h)</div>
+        </div>
+        <div class="audit__time">May 26 · 15:18</div>
+      </div>
+
+      <div class="audit__row">
+        <div class="audit__dot"></div>
+        <div>
+          <div class="audit__title">Maya clicked the verification link</div>
+          <div class="audit__sub">Confirmed from IP 203.0.113.42 · Singapore</div>
+          <div class="audit__sub muted">📨 Email → <b>maya@bluebird.com</b> (old): "Your account email has been changed."</div>
+        </div>
+        <div class="audit__time">May 26 · 16:04</div>
+      </div>
+
+      <div class="audit__row">
+        <div class="audit__dot audit__dot--success"></div>
+        <div>
+          <div class="audit__title">Email swap applied</div>
+          <div class="audit__sub">maya@bluebird.com → maya.tan@bluebird.co · all active sessions invalidated, user must sign in again</div>
+        </div>
+        <div class="audit__time">May 26 · 16:04</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     8 · ORIGINAL ADMIN AFTER TRANSFER  (decision needed)
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">08 · OPEN QUESTION</div>
+      <h2>What happens to the original Admin after a transfer?</h2>
+      <p class="spec__intro">Three reasonable answers. They imply different mental models and different recovery paths. <b>Please pick one</b> — I'll wire the chosen behaviour into the modal.</p>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <!-- Option A: downgrade to Operator (recommended) -->
+    <div class="opt opt--rec">
+      <h4>A · Demote to Operator</h4>
+      <div class="opt__sub">Original Admin stays on the customer but loses Admin permissions. Keeps email access, can still log in, can still be promoted again later via another approval.</div>
+
+      <div class="opt__viz">
+        <span class="avatar avatar--sm">J</span>
+        <span style="font-size: 12px;">Jamie</span>
+        <span class="badge badge--neutral" style="font-size: 10.5px;">Admin</span>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color: var(--color-text-tertiary);"><path d="M2 8h12m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="badge badge--info" style="font-size: 10.5px;">Operator</span>
+      </div>
+
+      <div class="opt__pros">
+        <b>Pros</b>
+        <ul style="margin: 0; padding-left: 16px;">
+          <li>Matches what users expect from "transfer."</li>
+          <li>No information loss — context for support, audit, hand-off.</li>
+          <li>Reversible: promote again with another approval.</li>
+        </ul>
+      </div>
+      <div class="opt__cons">
+        <b>Risks</b>
+        <ul style="margin: 0; padding-left: 16px;">
+          <li>Old Admin still has login access — if compromise was the reason for transfer, remember to revoke separately.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Option B: keep as co-Admin -->
+    <div class="opt">
+      <h4>B · Keep as second Admin</h4>
+      <div class="opt__sub">Transfer means "add another Admin." Original Admin keeps full permissions; the new Admin gets full permissions too. Customer now has two.</div>
+
+      <div class="opt__viz">
+        <span class="avatar avatar--sm">J</span>
+        <span style="font-size: 12px;">Jamie</span>
+        <span class="badge badge--neutral" style="font-size: 10.5px;">Admin</span>
+        <span style="font-size: 14px; color: var(--color-text-tertiary);">+</span>
+        <span class="avatar avatar--sm">P</span>
+        <span style="font-size: 12px;">Priya</span>
+        <span class="badge badge--neutral" style="font-size: 10.5px;">Admin</span>
+      </div>
+
+      <div class="opt__pros">
+        <b>Pros</b>
+        <ul style="margin: 0; padding-left: 16px;">
+          <li>Eliminates the "single-Admin gets locked out" failure mode.</li>
+          <li>Two-eye coverage on tenant operations.</li>
+        </ul>
+      </div>
+      <div class="opt__cons">
+        <b>Risks</b>
+        <ul style="margin: 0; padding-left: 16px;">
+          <li>Doesn't match the word "<i>Transfer</i>" — relabel to <i>"Grant Admin"</i>.</li>
+          <li>Mutual demotion still needs a separate flow.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Option C: remove from customer entirely -->
+    <div class="opt">
+      <h4>C · Remove from customer</h4>
+      <div class="opt__sub">Original Admin is fully detached. Cannot log into this customer at all afterwards.</div>
+
+      <div class="opt__viz">
+        <span class="avatar avatar--sm" style="opacity: 0.4; text-decoration: line-through;">J</span>
+        <span style="font-size: 12px; opacity: 0.5; text-decoration: line-through;">Jamie</span>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color: var(--color-text-tertiary);"><path d="M2 8h12m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="avatar avatar--sm">P</span>
+        <span style="font-size: 12px;">Priya</span>
+        <span class="badge badge--neutral" style="font-size: 10.5px;">Admin</span>
+      </div>
+
+      <div class="opt__pros">
+        <b>Pros</b>
+        <ul style="margin: 0; padding-left: 16px;">
+          <li>Cleanest answer when the original Admin left the company.</li>
+          <li>One step instead of two.</li>
+        </ul>
+      </div>
+      <div class="opt__cons">
+        <b>Risks</b>
+        <ul style="margin: 0; padding-left: 16px;">
+          <li>Destructive — easy to lose audit context.</li>
+          <li>Conflates two distinct intentions (transfer vs. offboard).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout mt-20">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <div>
+      <b>Recommendation: A · Demote to Operator.</b>
+      It matches the verb "Transfer", is reversible, and keeps audit context. We can offer B and C as separate actions later (<i>Grant Admin</i>, <i>Remove operator</i>) — they don't need to be folded into Transfer.
+    </div>
+  </div>
+
+  <h3 style="margin: 28px 0 10px;">Updated Transfer modal — preview with the recommended behaviour</h3>
+  <div class="canvas">
+    <div style="max-width: 560px; margin: 0 auto;">
+      <h2 style="margin: 0 0 4px;">Transfer Admin role</h2>
+      <p style="font-size: 13px; margin-bottom: 16px;">Atomic: <b>Jamie</b> becomes Operator at the same moment <b>Priya</b> becomes Admin. Both will be notified.</p>
+
+      <div class="diff">
+        <div class="diff__pane diff__pane--old" style="background: var(--color-bg-3);">
+          <h4>Current Admin</h4>
+          <div class="row" style="gap: 10px;">
+            <span class="avatar">J</span>
+            <div>
+              <div style="font-weight: 600; font-size: 13.5px;">Jamie Liu</div>
+              <div style="font-size: 12px; color: var(--color-text-tertiary);">jamie@foundry.io</div>
+            </div>
+          </div>
+          <div class="diff__sub mt-12" style="display: flex; align-items: center; gap: 6px;">
+            <span class="badge badge--neutral">Admin</span>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="color: var(--color-text-tertiary);"><path d="M2 8h12m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="badge badge--info">Operator</span>
+          </div>
+        </div>
+        <div class="diff__arrow">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h12m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="diff__pane diff__pane--new" style="background: var(--color-bg-3);">
+          <h4>New Admin</h4>
+          <div class="row" style="gap: 10px;">
+            <span class="avatar">P</span>
+            <div>
+              <div style="font-weight: 600; font-size: 13.5px;">Priya Sharma</div>
+              <div style="font-size: 12px; color: var(--color-text-tertiary);">priya@foundry.io</div>
+            </div>
+          </div>
+          <div class="diff__sub mt-12" style="display: flex; align-items: center; gap: 6px;">
+            <span class="badge badge--info">Operator</span>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="color: var(--color-text-tertiary);"><path d="M2 8h12m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="badge badge--success">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field mt-16">
+        <label>Reason <span class="req">*</span></label>
+        <textarea placeholder="Why this transfer? (≥ 10 characters)">Jamie is moving teams. Priya will own the account going forward.</textarea>
+      </div>
+
+      <div class="callout mt-16">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span>This will be sent to another Admin for review. The change takes effect immediately upon approval — no further confirmation from Jamie or Priya is required, but both will be notified.</span>
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end;" class="mt-16">
+        <button class="btn btn--ghost">Cancel</button>
+        <button class="btn btn--primary">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8a5 5 0 0 1 9-3M13 8a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M12 3v2.5h-2.5M4 13v-2.5h2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Submit for review
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     9 · GUARDRAILS & EDGE CASES
+============================================================ -->
+<section class="spec">
+  <div class="spec__head">
+    <div>
+      <div class="spec__num">09 · GUARDRAILS</div>
+      <h2>Edge cases worth nailing down</h2>
+      <p class="spec__intro">Things the design has to behave well in — most are covered by the rules already, listed here so we can sanity-check together.</p>
+    </div>
+  </div>
+
+  <div class="canvas canvas--flush">
+    <table class="statuses">
+      <tbody>
+        <tr>
+          <td><b>Submitter ≠ reviewer</b></td>
+          <td>The same Carbon account can never approve its own submission. The "Approve" button is hidden on those rows.</td>
+          <td class="muted">enforced server-side</td>
+        </tr>
+        <tr>
+          <td><b>Target ≠ reviewer</b></td>
+          <td>If the request targets operator X, then X also cannot approve (even if X is a Carbon Admin in another tenant).</td>
+          <td class="muted">defense-in-depth</td>
+        </tr>
+        <tr>
+          <td><b>One pending per operator per type</b></td>
+          <td>If <i>Change Email</i> is already pending for Maya, the menu item is disabled with tooltip "Pending review — withdraw to submit a new one."</td>
+          <td class="muted">avoid duplicates</td>
+        </tr>
+        <tr>
+          <td><b>Always at least one Admin</b></td>
+          <td>Transfer is allowed; standalone <i>Revoke Admin</i> is blocked when there's only one Admin on the customer.</td>
+          <td class="muted">anti-lockout</td>
+        </tr>
+        <tr>
+          <td><b>No emergency bypass</b></td>
+          <td>By your decision, single-person mode is not allowed. There is no override path — operations team must coordinate two Admins.</td>
+          <td class="muted">confirmed in scope</td>
+        </tr>
+        <tr>
+          <td><b>Verification link expiry</b></td>
+          <td>Email change: link expires in 24h. <i>Resend link</i> action is available to any Admin while the request sits in <i>Awaiting user verify</i>.</td>
+          <td class="muted">resendable</td>
+        </tr>
+        <tr>
+          <td><b>Audit retention</b></td>
+          <td>All four lifecycle events (submit / decide / verify / apply) land in the customer's audit log. Visible in the Customer-detail audit drawer; also exportable.</td>
+          <td class="muted">forever</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="sep" />
+
+<footer style="font-size: 13px; color: var(--color-text-tertiary); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+  <div>
+    <b style="color: var(--color-text-secondary);">Next step</b> — once you pick a disposition (Option A / B / C in §8), I'll fold the form, Approval Center, and menu changes into <code>customer-detail.jsx</code> and wire up the new top-level <i>Approvals</i> page.
+  </div>
+  <div>Carbon Admin · Approval workflow spec v1</div>
+</footer>
+
+</div>
+
+</body>
+</html>

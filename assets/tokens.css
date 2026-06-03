@@ -1,0 +1,270 @@
+/* ─────────────────────────────────────────────────────────────
+   TOMS Design System — Tokens v1.0
+   Engineering-grade · Light + Dark · OKLCH color space
+   Single source of truth; do not hardcode values in components.
+   ───────────────────────────────────────────────────────────── */
+
+:root, [data-theme="light"] {
+  /* ─── Color · Brand ───────────────────────────────────── */
+  --color-brand-mono:        oklch(22% 0.015 270);
+  --color-brand-mono-strong: oklch(14% 0.012 270);
+  --color-brand-mono-soft:   oklch(28% 0.02  270);
+
+  /* ─── Color · Primary (CTA — midnight indigo) ─────────── */
+  --color-primary-50:  oklch(97%  0.012 262);
+  --color-primary-100: oklch(94%  0.025 262);
+  --color-primary-200: oklch(86%  0.06  262);
+  --color-primary-300: oklch(72%  0.10  262);
+  --color-primary-400: oklch(55%  0.14  262);
+  --color-primary-500: oklch(40%  0.14  262);
+  --color-primary-600: oklch(32%  0.10  262);
+  --color-primary-700: oklch(24%  0.06  262);  /* default CTA bg */
+  --color-primary-800: oklch(18%  0.04  262);
+  --color-primary-900: oklch(12%  0.025 262);
+
+  /* ─── Color · Secondary (cool steel — secondary actions) */
+  --color-secondary-50:  oklch(97%  0.005 250);
+  --color-secondary-100: oklch(94%  0.008 250);
+  --color-secondary-500: oklch(56%  0.02  250);
+  --color-secondary-700: oklch(38%  0.018 250);
+  --color-secondary-900: oklch(22%  0.012 250);
+
+  /* ─── Color · Accent (interactive highlights) ─────────── */
+  --color-accent-50:  oklch(97% 0.02 265);
+  --color-accent-100: oklch(93% 0.05 265);
+  --color-accent-200: oklch(86% 0.10 265);
+  --color-accent-500: oklch(58% 0.22 270);
+  --color-accent-600: oklch(52% 0.24 272);
+  --color-accent-700: oklch(46% 0.24 274);
+
+  /* ─── Color · Semantic ────────────────────────────────── */
+  --color-success-50:  oklch(96% 0.03  152);
+  --color-success-500: oklch(58% 0.14  152);
+  --color-success-700: oklch(46% 0.13  152);
+
+  --color-warning-50:  oklch(96.5% 0.04 80);
+  --color-warning-500: oklch(70%   0.16 70);
+  --color-warning-700: oklch(56%   0.15 60);
+
+  --color-error-50:  oklch(96% 0.04 25);
+  --color-error-500: oklch(58% 0.20 25);
+  --color-error-700: oklch(46% 0.19 25);
+
+  --color-info-50:  oklch(96% 0.03 230);
+  --color-info-500: oklch(60% 0.14 230);
+  --color-info-700: oklch(48% 0.13 230);
+
+  /* ─── Color · Surfaces ────────────────────────────────── */
+  --color-bg-1: oklch(99%   0.003 90);   /* app bg */
+  --color-bg-2: oklch(100%  0     0);    /* surface / card */
+  --color-bg-3: oklch(97.2% 0.004 90);   /* sunken / sidebar */
+  --color-bg-hover:    oklch(95.8% 0.005 90);
+  --color-bg-active:   oklch(93.5% 0.006 90);
+  --color-bg-overlay:  oklch(15% 0.01 270 / 0.45);
+
+  /* ─── Color · Text ────────────────────────────────────── */
+  --color-text-primary:    oklch(18% 0.01  270);
+  --color-text-secondary:  oklch(42% 0.008 270);
+  --color-text-tertiary:   oklch(58% 0.006 270);
+  --color-text-disabled:   oklch(72% 0.005 270);
+  --color-text-inverse:    oklch(99% 0     0);
+  --color-text-on-primary: oklch(99% 0     0);
+
+  /* ─── Color · Border ──────────────────────────────────── */
+  --color-border-subtle:  oklch(93% 0.005 90);
+  --color-border-default: oklch(89% 0.005 90);
+  --color-border-strong:  oklch(80% 0.006 90);
+  --color-border-focus:   oklch(40% 0.14  262);
+
+  /* ─── Typography ──────────────────────────────────────── */
+  --font-family-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-family-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --font-size-xs:   12px;
+  --font-size-sm:   13px;
+  --font-size-md:   14px;   /* base body */
+  --font-size-lg:   16px;
+  --font-size-xl:   18px;
+  --font-size-2xl:  22px;
+  --font-size-3xl:  28px;
+  --font-size-4xl:  36px;
+  --font-size-5xl:  48px;
+
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  --line-height-tight:   1.2;
+  --line-height-snug:    1.35;
+  --line-height-normal:  1.5;
+  --line-height-relaxed: 1.7;
+
+  --letter-spacing-tight:  -0.02em;
+  --letter-spacing-normal: -0.005em;
+  --letter-spacing-wide:    0.04em;
+
+  /* ─── Spacing (4px grid) ──────────────────────────────── */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Semantic spacing aliases */
+  --space-xs: var(--space-1);
+  --space-sm: var(--space-2);
+  --space-md: var(--space-4);
+  --space-lg: var(--space-6);
+  --space-xl: var(--space-10);
+
+  /* ─── Radius ──────────────────────────────────────────── */
+  --radius-none: 0;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-2xl:  16px;
+  --radius-full: 9999px;
+
+  /* ─── Border width ────────────────────────────────────── */
+  --border-width-thin:    1px;
+  --border-width-default: 1px;
+  --border-width-thick:   2px;
+
+  /* ─── Shadows · 5 elevations ──────────────────────────── */
+  --shadow-1: 0 1px 0 oklch(0% 0 0 / 0.04);
+  --shadow-2: 0 1px 2px oklch(0% 0 0 / 0.05), 0 1px 0 oklch(0% 0 0 / 0.02);
+  --shadow-3: 0 4px 12px oklch(0% 0 0 / 0.06), 0 1px 0 oklch(0% 0 0 / 0.03);
+  --shadow-4: 0 12px 24px oklch(0% 0 0 / 0.08), 0 2px 4px oklch(0% 0 0 / 0.04);
+  --shadow-5: 0 24px 48px oklch(0% 0 0 / 0.12), 0 4px 8px oklch(0% 0 0 / 0.06);
+
+  /* CTA inset highlight (midnight indigo button) */
+  --shadow-cta: inset 0 1px 0 oklch(100% 0 0 / 0.12),
+                0 1px 2px oklch(0% 0 0 / 0.25),
+                0 0 0 0.5px oklch(0% 0 0 / 0.4);
+
+  /* Focus ring */
+  --shadow-focus: 0 0 0 3px oklch(40% 0.14 262 / 0.25);
+
+  /* ─── Z-index scale ───────────────────────────────────── */
+  --z-base:     0;
+  --z-dropdown: 1000;
+  --z-sticky:   1020;
+  --z-overlay:  1040;   /* drawer / fixed sidebar */
+  --z-modal:    1050;
+  --z-popover:  1060;
+  --z-tooltip:  1070;
+  --z-toast:    1080;
+  --z-cmdk:     1090;
+
+  /* ─── Breakpoints (reference; use in JS or @media) ────── */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ─── Motion ──────────────────────────────────────────── */
+  --duration-instant:  80ms;
+  --duration-fast:    120ms;
+  --duration-normal:  200ms;
+  --duration-slow:    320ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-emphasized: cubic-bezier(0.3, 0, 0, 1);
+
+  /* ─── Component sizing tokens (avoid magic numbers) ───── */
+  --control-height-sm: 28px;
+  --control-height-md: 36px;
+  --control-height-lg: 44px;
+  --control-padding-x-sm: 10px;
+  --control-padding-x-md: 14px;
+  --control-padding-x-lg: 18px;
+}
+
+[data-theme="dark"] {
+  --color-brand-mono:        oklch(82% 0.008 270);
+  --color-brand-mono-strong: oklch(96% 0.005 270);
+  --color-brand-mono-soft:   oklch(72% 0.01  270);
+
+  --color-primary-50:  oklch(20% 0.04 262);
+  --color-primary-100: oklch(24% 0.05 262);
+  --color-primary-200: oklch(30% 0.07 262);
+  --color-primary-300: oklch(40% 0.10 262);
+  --color-primary-400: oklch(55% 0.13 262);
+  --color-primary-500: oklch(70% 0.13 262);
+  --color-primary-600: oklch(76% 0.12 262);
+  --color-primary-700: oklch(82% 0.10 262);  /* CTA bg */
+  --color-primary-800: oklch(88% 0.07 262);
+  --color-primary-900: oklch(94% 0.04 262);
+
+  --color-secondary-50:  oklch(22% 0.012 250);
+  --color-secondary-100: oklch(26% 0.014 250);
+  --color-secondary-500: oklch(64% 0.02  250);
+  --color-secondary-700: oklch(80% 0.018 250);
+  --color-secondary-900: oklch(94% 0.005 250);
+
+  --color-bg-1: oklch(15% 0.005 270);
+  --color-bg-2: oklch(18% 0.006 270);
+  --color-bg-3: oklch(13% 0.005 270);
+  --color-bg-hover:   oklch(22% 0.008 270);
+  --color-bg-active:  oklch(26% 0.01  270);
+  --color-bg-overlay: oklch(0% 0 0 / 0.55);
+
+  --color-text-primary:    oklch(96% 0.005 270);
+  --color-text-secondary:  oklch(74% 0.008 270);
+  --color-text-tertiary:   oklch(58% 0.008 270);
+  --color-text-disabled:   oklch(42% 0.008 270);
+  --color-text-inverse:    oklch(18% 0.01  270);
+  --color-text-on-primary: oklch(15% 0.01  270);
+
+  --color-border-subtle:  oklch(22% 0.006 270);
+  --color-border-default: oklch(28% 0.008 270);
+  --color-border-strong:  oklch(38% 0.01  270);
+  --color-border-focus:   oklch(70% 0.13  262);
+
+  --color-success-50:  oklch(28% 0.05 152);
+  --color-success-500: oklch(70% 0.15 152);
+  --color-success-700: oklch(80% 0.13 152);
+
+  --color-warning-50:  oklch(30% 0.06 70);
+  --color-warning-500: oklch(78% 0.15 70);
+  --color-warning-700: oklch(86% 0.13 70);
+
+  --color-error-50:  oklch(30% 0.07 25);
+  --color-error-500: oklch(70% 0.18 25);
+  --color-error-700: oklch(80% 0.16 25);
+
+  --color-info-50:  oklch(28% 0.06 230);
+  --color-info-500: oklch(72% 0.14 230);
+  --color-info-700: oklch(82% 0.12 230);
+
+  --shadow-1: 0 1px 0 oklch(0% 0 0 / 0.4);
+  --shadow-2: 0 1px 2px oklch(0% 0 0 / 0.4);
+  --shadow-3: 0 4px 12px oklch(0% 0 0 / 0.5);
+  --shadow-4: 0 12px 24px oklch(0% 0 0 / 0.55);
+  --shadow-5: 0 24px 48px oklch(0% 0 0 / 0.6);
+
+  --shadow-cta: inset 0 1px 0 oklch(100% 0 0 / 0.18),
+                0 1px 2px oklch(0% 0 0 / 0.5),
+                0 0 0 0.5px oklch(100% 0 0 / 0.1);
+  --shadow-focus: 0 0 0 3px oklch(70% 0.13 262 / 0.35);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+  }
+}

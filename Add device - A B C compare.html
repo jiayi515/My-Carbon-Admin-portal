@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Add Device — A · B · C comparison</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/tokens.css"/>
+  <link rel="stylesheet" href="assets/components.css"/>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font-family-sans); color: var(--color-text-primary); background: var(--color-bg-1); -webkit-font-smoothing: antialiased; }
+    *, *::before, *::after { box-sizing: border-box; }
+    #root { height: 100%; }
+
+    /* Light artboard pop animations (A) */
+    @keyframes A_fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes A_zoomIn { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+    /* Force native selects to inherit fonts */
+    select, button, input, textarea { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Design canvas + shared mini-system + 3 prototypes -->
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="add-device-shared.jsx"></script>
+  <script type="text/babel" src="add-device-A.jsx"></script>
+  <script type="text/babel" src="add-device-B.jsx"></script>
+  <script type="text/babel" src="add-device-C.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    function App() {
+      // Wait for all globals to be defined by the type=text/babel scripts
+      // which load asynchronously after the DOM.
+      const [ready, setReady] = React.useState(() =>
+        !!(window.DesignCanvas && window.DCSection && window.DCArtboard
+           && window.PrototypeA && window.PrototypeB && window.PrototypeC));
+
+      React.useEffect(() => {
+        if (ready) return;
+        const tick = () => {
+          if (window.DesignCanvas && window.DCSection && window.DCArtboard
+              && window.PrototypeA && window.PrototypeB && window.PrototypeC) setReady(true);
+          else setTimeout(tick, 30);
+        };
+        tick();
+      }, [ready]);
+
+      if (!ready) {
+        return (
+          <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--color-text-tertiary)', fontSize: 13 }}>
+            Loading prototypes…
+          </div>
+        );
+      }
+
+      const { DesignCanvas, DCSection, DCArtboard, PrototypeA, PrototypeB, PrototypeC } = window;
+
+      return (
+        <DesignCanvas>
+          <DCSection
+            id="add-device"
+            title="Add device — Type selection"
+            subtitle="同型号需同时支持 Semi-integration 与 Stand-alone 的录入逻辑探索"
+          >
+            <DCArtboard id="A" label="A · Popup after pick" width={920} height={1020}>
+              <div data-screen-label="A Popup after pick" style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+                <PrototypeA/>
+              </div>
+            </DCArtboard>
+            <DCArtboard id="B" label="B · Inline Type + Split row" width={920} height={1020}>
+              <div data-screen-label="B Inline Type + Split row" style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+                <PrototypeB/>
+              </div>
+            </DCArtboard>
+            <DCArtboard id="C" label="C · Model × Type matrix" width={920} height={1020}>
+              <div data-screen-label="C Model x Type matrix" style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+                <PrototypeC/>
+              </div>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Invite · Card States (v2)</title>
+  <link rel="stylesheet" href="assets/tokens.css" />
+  <link rel="stylesheet" href="assets/components.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font-family-sans); color: var(--color-text-primary); background: var(--color-bg-1); }
+    *, *::before, *::after { box-sizing: border-box; }
+    #root { height: 100%; }
+
+    /* ── Card baseline ────────── */
+    .pic {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 12px;
+      background: var(--color-bg-2);
+      padding: 18px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .pic--expired { border-color: var(--color-error-200, var(--color-border-subtle)); background: var(--color-error-50, var(--color-bg-2)); }
+    .pic__lead {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--color-warning-50, var(--color-bg-3));
+      color: var(--color-warning-700, var(--color-text-secondary));
+      display: grid; place-items: center; flex-shrink: 0;
+      border: 1px solid var(--color-warning-200, var(--color-border-subtle));
+    }
+    .pic--expired .pic__lead { background: var(--color-error-100, var(--color-bg-3)); color: var(--color-error-700, var(--color-text-secondary)); border-color: var(--color-error-200, var(--color-border-subtle)); }
+    .pic--linkonly .pic__lead { background: var(--color-bg-3); color: var(--color-text-secondary); border-color: var(--color-border-subtle); }
+
+    .pic__body { flex: 1; min-width: 0; }
+    .pic__head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    .pic__title { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
+    .pic__sub { font-size: 12.5px; color: var(--color-text-secondary); line-height: 1.55; margin-bottom: 10px; }
+    .pic__sub strong { color: var(--color-text-primary); }
+    .pic__link {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px;
+      background: var(--color-bg-3);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 8px;
+      font-family: var(--font-family-mono);
+      font-size: 12px; color: var(--color-text-secondary);
+      margin-bottom: 12px; overflow: hidden;
+    }
+    .pic--expired .pic__link { opacity: 0.55; text-decoration: line-through; }
+    .pic__link span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pic__hint { font-size: 12px; color: var(--color-text-tertiary); line-height: 1.5; margin-bottom: 14px; }
+    .pic__hint strong { color: var(--color-text-secondary); }
+
+    .pic__actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    /* ── Badges ────────── */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; border: 1px solid; }
+    .badge--warning { color: var(--color-warning-700); background: var(--color-warning-50); border-color: oklch(75% 0.14 75 / 0.3); }
+    .badge--error   { color: var(--color-error-700);   background: var(--color-error-50);   border-color: oklch(60% 0.18 25 / 0.3); }
+    .badge--info    { color: var(--color-info-700);    background: oklch(96% 0.03 230);     border-color: oklch(60% 0.14 230 / 0.3); }
+    .badge--muted   { color: var(--color-text-tertiary); background: var(--color-bg-3); border-color: var(--color-border-subtle); }
+    .badge__dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+
+    /* ── Buttons ────────── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; height: 30px; border-radius: 6px; border: 1px solid transparent; font: 500 13px/1 var(--font-family-sans); cursor: pointer; transition: background 0.12s, border 0.12s, color 0.12s; user-select: none; }
+    .btn--primary   { background: var(--color-primary-700); color: #fff; box-shadow: var(--shadow-cta); }
+    .btn--primary:hover  { background: var(--color-primary-800, var(--color-primary-700)); }
+    .btn--secondary { background: var(--color-bg-2); border-color: var(--color-border-default); color: var(--color-text-primary); }
+    .btn--secondary:hover{ background: var(--color-bg-hover); }
+    .btn--ghost     { background: transparent; color: var(--color-text-secondary); }
+    .btn--ghost:hover    { background: var(--color-bg-hover); color: var(--color-text-primary); }
+    .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .btn svg { flex: none; }
+
+    .actions-divider { width: 1px; height: 18px; background: var(--color-border-subtle); margin: 0 2px; }
+
+    /* ── Canvas shell ────────── */
+    .canvas {
+      padding: 40px 48px 80px;
+      background:
+        radial-gradient(circle, var(--color-border-subtle) 1px, transparent 1px) 0 0 / 24px 24px,
+        var(--color-bg-1);
+      min-height: 100%;
+    }
+    .canvas__head { max-width: 1200px; margin: 0 auto 28px; }
+    .canvas__eyebrow { font: 500 11px/1 var(--font-family-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 8px; }
+    .canvas__title { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: var(--color-text-primary); margin: 0 0 8px; }
+    .canvas__lede { font-size: 14px; color: var(--color-text-secondary); line-height: 1.55; max-width: 760px; margin: 0; }
+    .canvas__ver { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: var(--color-primary-50); color: var(--color-primary-700); font: 600 11px/1 var(--font-family-mono); letter-spacing: 0.08em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; border: 1px solid oklch(60% 0.14 262 / 0.3); }
+
+    /* ── Diff callout ────────── */
+    .diff { max-width: 1200px; margin: 0 auto 36px; padding: 16px 20px; background: var(--color-bg-2); border: 1px solid var(--color-border-default); border-left: 3px solid var(--color-primary-500); border-radius: 8px; }
+    .diff__head { font: 500 11px/1 var(--font-family-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-primary-700); margin-bottom: 10px; }
+    .diff__body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.65; }
+    .diff__body strong { color: var(--color-text-primary); font-weight: 600; }
+    .diff__body code { font: 500 12px var(--font-family-mono); padding: 1px 5px; background: var(--color-bg-3); border-radius: 3px; border: 1px solid var(--color-border-subtle); color: var(--color-text-primary); }
+    .diff__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+    .diff__col { padding: 12px 14px; border-radius: 6px; font-size: 12.5px; line-height: 1.6; }
+    .diff__col--out { background: oklch(96% 0.04 25); border: 1px solid oklch(80% 0.12 25 / 0.3); color: var(--color-text-secondary); }
+    .diff__col--in  { background: oklch(96% 0.04 152); border: 1px solid oklch(58% 0.14 152 / 0.25); color: var(--color-text-secondary); }
+    .diff__col-title { font: 500 11px/1 var(--font-family-mono); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+    .diff__col--out .diff__col-title { color: var(--color-error-700); }
+    .diff__col--in .diff__col-title { color: var(--color-success-700); }
+    .diff__col ul { margin: 0; padding-left: 18px; }
+    .diff__col li { margin: 3px 0; }
+
+    /* ── Decision table ────────── */
+    .decision { max-width: 1200px; margin: 0 auto 48px; background: var(--color-bg-2); border: 1px solid var(--color-border-default); border-radius: 12px; overflow: hidden; }
+    .decision__head { padding: 14px 18px; border-bottom: 1px solid var(--color-border-subtle); }
+    .decision__title { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+    .decision__sub { font-size: 12px; color: var(--color-text-tertiary); margin: 0; }
+    table.dt { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    table.dt th, table.dt td { text-align: left; padding: 11px 14px; border-top: 1px solid var(--color-border-subtle); vertical-align: top; }
+    table.dt th { font-weight: 500; color: var(--color-text-tertiary); background: var(--color-bg-3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+    table.dt td.dt-state { color: var(--color-text-primary); font-weight: 500; }
+    table.dt td .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; border: 1px solid var(--color-border-subtle); background: var(--color-bg-1); color: var(--color-text-secondary); margin-right: 4px; }
+    table.dt td .pill--primary { background: var(--color-primary-50); color: var(--color-primary-700); border-color: oklch(60% 0.14 262 / 0.25); }
+    table.dt td .pill--ghost { background: transparent; color: var(--color-text-tertiary); }
+
+    /* ── Section ────────── */
+    .section { max-width: 1200px; margin: 0 auto 44px; }
+    .section__head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px dashed var(--color-border-subtle); }
+    .section__num { font: 600 13px/1 var(--font-family-mono); color: var(--color-text-tertiary); }
+    .section__title { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin: 0; }
+    .section__when { font-size: 12px; color: var(--color-text-tertiary); }
+
+    .frame {
+      background: var(--color-bg-1);
+      border: 1px solid var(--color-border-default);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: var(--shadow-1);
+    }
+    .frame__label {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .frame__label-left { display: flex; align-items: center; gap: 10px; }
+    .frame__label-tag { font: 600 10px/1 var(--font-family-mono); padding: 4px 8px; background: var(--color-bg-3); border: 1px solid var(--color-border-subtle); border-radius: 4px; color: var(--color-text-secondary); letter-spacing: 0.06em; text-transform: uppercase; }
+    .frame__label-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+    .frame__primary-pill { font-size: 11.5px; color: var(--color-text-tertiary); display: inline-flex; align-items: center; gap: 5px; }
+    .frame__primary-pill strong { color: var(--color-text-secondary); font-weight: 500; }
+
+    .rationale {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: var(--color-bg-2);
+      border: 1px dashed var(--color-border-subtle);
+      border-radius: 8px;
+      font-size: 12.5px;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+    .rationale strong { color: var(--color-text-primary); font-weight: 600; }
+    .rationale code { font: 500 11.5px var(--font-family-mono); padding: 1px 5px; background: var(--color-bg-3); border-radius: 3px; border: 1px solid var(--color-border-subtle); color: var(--color-text-primary); }
+
+    /* ── Confirm dialog mock ────────── */
+    .modal-mock { background: var(--color-bg-1); border: 1px solid var(--color-border-default); border-radius: 12px; box-shadow: var(--shadow-3, 0 24px 64px oklch(0% 0 0 / 0.18)); max-width: 480px; overflow: hidden; }
+    .modal-mock__head { padding: 16px 20px; border-bottom: 1px solid var(--color-border-subtle); }
+    .modal-mock__title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); }
+    .modal-mock__body { padding: 16px 20px; font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+    .modal-mock__body strong { color: var(--color-text-primary); }
+    .modal-mock__email-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; background: var(--color-bg-3); border: 1px solid var(--color-border-subtle); border-radius: 8px; font-family: var(--font-family-mono); font-size: 12.5px; color: var(--color-text-primary); }
+    .modal-mock__email-row a { color: var(--color-primary-700); text-decoration: none; font-family: var(--font-family-sans); font-size: 12px; margin-left: auto; }
+    .modal-mock__foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; background: var(--color-bg-2); border-top: 1px solid var(--color-border-subtle); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1 1"/><path d="M14 10a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1"/></g></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></g></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></g></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></g></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6 18 20a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></g></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v6"/><circle cx="12" cy="16.5" r="0.7" fill="currentColor"/></g></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.25V21h3.75L18 9.75 14.25 6 3 17.25Z"/><path d="m15 5 4 4"/></g></symbol>
+    </defs>
+  </svg>
+
+  <div class="canvas">
+    <div class="canvas__head">
+      <div class="canvas__eyebrow">Customers / Operators tab · Pending invite card</div>
+      <h1 class="canvas__title">Admin invite — card states <span class="canvas__ver">v2 · no history</span></h1>
+      <p class="canvas__lede">
+        Without a resend counter or "last sent" timestamp, the state machine collapses from five states to <strong style="color: var(--color-text-primary);">three</strong>.
+        "Send" and "Resend" become the same verb — the system doesn't know or care whether this is the first send or the fifth. The card just has to answer: <em>"is the link still good, and is there a recipient on file?"</em>
+      </p>
+    </div>
+
+    <!-- What changed from v1 -->
+    <div class="diff">
+      <div class="diff__head">What changed from v1</div>
+      <div class="diff__body">
+        Dropping email history removes both the data we tracked (<code>resendCount</code>, last-sent timestamp) and any UI built on top of it. Two whole states disappear.
+      </div>
+      <div class="diff__grid">
+        <div class="diff__col diff__col--out">
+          <div class="diff__col-title">Removed</div>
+          <ul>
+            <li>State ① <strong>Just sent</strong> (depended on "&lt; 5 min ago")</li>
+            <li>State ③ <strong>Stalled</strong> (depended on <code style="font-size: 11px;">resendCount ≥ 3</code> + escalation banner)</li>
+            <li>"Sent 2× · last 12 min ago" pills on every card</li>
+            <li>Distinct "Resend" verb (now just "Send")</li>
+          </ul>
+        </div>
+        <div class="diff__col diff__col--in">
+          <div class="diff__col-title">Kept &amp; simplified</div>
+          <ul>
+            <li><strong>Active · email on file</strong> — primary is <code>Send email</code></li>
+            <li><strong>Active · link-only</strong> — primary is <code>Copy link</code></li>
+            <li><strong>Expired</strong> — primary is <code>Regenerate</code></li>
+            <li>Confirm dialog before re-sending (replaces the counter as the friction layer)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision table -->
+    <div class="decision">
+      <div class="decision__head">
+        <div class="decision__title">Primary action by state</div>
+        <p class="decision__sub">3 states. Card derives state from <code style="font: 500 12px var(--font-family-mono); background: var(--color-bg-3); padding: 1px 5px; border-radius: 3px;">pendingInvite.recipientEmail</code> and <code style="font: 500 12px var(--font-family-mono); background: var(--color-bg-3); padding: 1px 5px; border-radius: 3px;">expiresAt</code>. No counters required.</p>
+      </div>
+      <table class="dt">
+        <thead>
+          <tr>
+            <th style="width: 30%">State</th>
+            <th style="width: 22%">Primary</th>
+            <th style="width: 24%">Secondary</th>
+            <th>Ghost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="dt-state">① Active · email on file</td>
+            <td><span class="pill pill--primary">Send email</span></td>
+            <td><span class="pill">Copy link</span> <span class="pill">View details</span></td>
+            <td><span class="pill pill--ghost">Regenerate</span><span class="pill pill--ghost">Revoke</span></td>
+          </tr>
+          <tr>
+            <td class="dt-state">② Active · link-only</td>
+            <td><span class="pill pill--primary">Copy link</span></td>
+            <td><span class="pill">Send via email</span> <span class="pill">View details</span></td>
+            <td><span class="pill pill--ghost">Regenerate</span><span class="pill pill--ghost">Revoke</span></td>
+          </tr>
+          <tr>
+            <td class="dt-state">③ Expired</td>
+            <td><span class="pill pill--primary">Regenerate link</span></td>
+            <td>—</td>
+            <td><span class="pill pill--ghost">Cancel invitation</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ① Active · email -->
+    <section class="section">
+      <div class="section__head">
+        <span class="section__num">01</span>
+        <h2 class="section__title">Active · email on file</h2>
+        <span class="section__when">Default case — invite minted, recipient email recorded, link valid</span>
+      </div>
+      <div class="frame">
+        <div class="frame__label">
+          <div class="frame__label-left">
+            <span class="frame__label-tag">State 01</span>
+            <span class="frame__label-name">Active · email on file</span>
+          </div>
+          <span class="frame__primary-pill">Primary action: <strong>Send email</strong></span>
+        </div>
+
+        <div class="pic">
+          <div class="pic__lead">
+            <svg width="18" height="18"><use href="#i-link" /></svg>
+          </div>
+          <div class="pic__body">
+            <div class="pic__head">
+              <div class="pic__title">Admin activation link issued</div>
+              <span class="badge badge--warning"><span class="badge__dot"></span>Awaiting activation</span>
+              <span class="badge badge--info"><span class="badge__dot"></span>Onboarding</span>
+            </div>
+            <div class="pic__sub">
+              Recipient: <strong>ceo@northbay.com</strong>
+              <button style="background: transparent; border: 0; color: var(--color-primary-700); font-size: 12.5px; padding: 0 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+                <svg width="11" height="11"><use href="#i-edit" /></svg> change
+              </button>
+              <br/>
+              Generated <strong>4 hours ago</strong> by <span style="color: var(--color-text-secondary);">admin@carbon</span> · expires <strong>Jun 04, 2026</strong>.
+            </div>
+            <div class="pic__link">
+              <svg width="13" height="13"><use href="#i-link" /></svg>
+              <span>https://app.carbon.toms/invite/a3kf9p2x-7m4q</span>
+            </div>
+            <div class="pic__hint">
+              If the recipient hasn't received the email, click <strong>Send email</strong> to deliver it again — the link doesn't change.
+              Use <strong>Regenerate</strong> only if you suspect the link itself is compromised or you want a fresh expiry window.
+            </div>
+            <div class="pic__actions">
+              <button class="btn btn--primary"><svg width="14" height="14"><use href="#i-mail" /></svg>Send email</button>
+              <button class="btn btn--secondary"><svg width="14" height="14"><use href="#i-copy" /></svg>Copy link</button>
+              <button class="btn btn--secondary"><svg width="14" height="14"><use href="#i-eye" /></svg>View details</button>
+              <span class="actions-divider"></span>
+              <button class="btn btn--ghost"><svg width="14" height="14"><use href="#i-refresh" /></svg>Regenerate</button>
+              <button class="btn btn--ghost"><svg width="14" height="14"><use href="#i-trash" /></svg>Revoke</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rationale">
+          <strong>One verb covers first-send and resend.</strong> Without history, the system can't and shouldn't differentiate — <code>Send email</code> works whether the user is sending for the first time or the fifth. The card shows the recipient as a single editable field (not a log), so the user can also fix a wrong address in place. <strong>Regenerate is ghost</strong> because in this state it would invalidate a perfectly good token; users only reach for it for security or expiry reasons, not delivery reasons.
+        </div>
+
+        <!-- Inline confirm dialog mock -->
+        <div style="margin-top: 18px;">
+          <div style="font: 500 11px/1 var(--font-family-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 10px;">Click → confirm dialog</div>
+          <div class="modal-mock">
+            <div class="modal-mock__head">
+              <div class="modal-mock__title">Send activation email?</div>
+            </div>
+            <div class="modal-mock__body">
+              The invitation link will be emailed to the recipient below. The link doesn't change — anyone who already received it can still use the same link.
+              <div class="modal-mock__email-row">
+                <svg width="14" height="14"><use href="#i-mail" /></svg>
+                ceo@northbay.com
+                <a href="#">Send to another email →</a>
+              </div>
+            </div>
+            <div class="modal-mock__foot">
+              <button class="btn btn--ghost">Cancel</button>
+              <button class="btn btn--primary"><svg width="14" height="14"><use href="#i-mail" /></svg>Send email</button>
+            </div>
+          </div>
+          <div style="margin-top: 10px; font-size: 12px; color: var(--color-text-tertiary); line-height: 1.55; max-width: 480px;">
+            The confirm dialog replaces the counter as the speed bump. It also exposes the "change recipient" path (one click), so a wrong email is a 5-second fix instead of a Regenerate + retype.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ② Active · link-only -->
+    <section class="section">
+      <div class="section__head">
+        <span class="section__num">02</span>
+        <h2 class="section__title">Active · link-only</h2>
+        <span class="section__when">Admin minted the link, never recorded a recipient email — sharing manually</span>
+      </div>
+      <div class="frame">
+        <div class="frame__label">
+          <div class="frame__label-left">
+            <span class="frame__label-tag">State 02</span>
+            <span class="frame__label-name">Active · link-only</span>
+          </div>
+          <span class="frame__primary-pill">Primary: <strong>Copy link</strong> · Send via email is secondary</span>
+        </div>
+
+        <div class="pic pic--linkonly">
+          <div class="pic__lead">
+            <svg width="18" height="18"><use href="#i-link" /></svg>
+          </div>
+          <div class="pic__body">
+            <div class="pic__head">
+              <div class="pic__title">Admin activation link issued</div>
+              <span class="badge badge--warning"><span class="badge__dot"></span>Awaiting activation</span>
+              <span class="badge badge--muted">Link-only</span>
+            </div>
+            <div class="pic__sub">
+              No recipient email on file · generated <strong>1 day ago</strong> by <span style="color: var(--color-text-secondary);">admin@carbon</span> · expires <strong>Jun 04, 2026</strong>.
+            </div>
+            <div class="pic__link">
+              <svg width="13" height="13"><use href="#i-link" /></svg>
+              <span>https://app.carbon.toms/invite/sb7q4nx9-pl3z</span>
+            </div>
+            <div class="pic__hint">
+              No email has been sent for this invite. Copy the link to share manually, or switch to email delivery if you'd prefer the system to send it.
+            </div>
+            <div class="pic__actions">
+              <button class="btn btn--primary"><svg width="14" height="14"><use href="#i-copy" /></svg>Copy link</button>
+              <button class="btn btn--secondary"><svg width="14" height="14"><use href="#i-mail" /></svg>Send via email</button>
+              <button class="btn btn--secondary"><svg width="14" height="14"><use href="#i-eye" /></svg>View details</button>
+              <span class="actions-divider"></span>
+              <button class="btn btn--ghost"><svg width="14" height="14"><use href="#i-refresh" /></svg>Regenerate</button>
+              <button class="btn btn--ghost"><svg width="14" height="14"><use href="#i-trash" /></svg>Revoke</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rationale">
+          <strong>Answers your question about renaming <code>View link</code>.</strong> In this state the user came back to grab the link again (or scan the QR) — <code>Copy link</code> is the right primary. <code>Send via email</code> stays as a sibling secondary so the user can opt into email delivery without leaving the card. Renaming <code>View link</code> globally to <code>Send email</code> would block this path. <strong>Once they send via email, the card transitions to state 01</strong> automatically.
+        </div>
+      </div>
+    </section>
+
+    <!-- ③ Expired -->
+    <section class="section">
+      <div class="section__head">
+        <span class="section__num">03</span>
+        <h2 class="section__title">Expired</h2>
+        <span class="section__when">Token past <code style="font: 500 12px var(--font-family-mono);">expiresAt</code> · only Regenerate is meaningful</span>
+      </div>
+      <div class="frame">
+        <div class="frame__label">
+          <div class="frame__label-left">
+            <span class="frame__label-tag">State 03</span>
+            <span class="frame__label-name">Expired</span>
+          </div>
+          <span class="frame__primary-pill">Primary: <strong>Regenerate link</strong></span>
+        </div>
+
+        <div class="pic pic--expired">
+          <div class="pic__lead">
+            <svg width="18" height="18"><use href="#i-alert" /></svg>
+          </div>
+          <div class="pic__body">
+            <div class="pic__head">
+              <div class="pic__title">Admin activation link expired</div>
+              <span class="badge badge--error"><span class="badge__dot"></span>Expired</span>
+            </div>
+            <div class="pic__sub">
+              Recipient: <strong>ceo@aurora-freight.example</strong> · generated <strong>14 days ago</strong> · expired <strong style="color: var(--color-error-700);">2 days ago</strong> (May 26, 2026).
+            </div>
+            <div class="pic__link">
+              <svg width="13" height="13"><use href="#i-link" /></svg>
+              <span>https://app.carbon.toms/invite/a3kf9p2x-7m4q</span>
+            </div>
+            <div class="pic__hint">
+              The link is no longer valid. Anyone who tries it will see <em>"link expired"</em>. Regenerate to issue a fresh link (auto-emails the same recipient by default), or cancel the invitation.
+            </div>
+            <div class="pic__actions">
+              <button class="btn btn--primary"><svg width="14" height="14"><use href="#i-refresh" /></svg>Regenerate link</button>
+              <button class="btn btn--ghost"><svg width="14" height="14"><use href="#i-trash" /></svg>Cancel invitation</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rationale">
+          <strong>Send email is intentionally hidden here</strong> — emailing a dead link would just confuse the recipient. Regenerate is the only repair path. After the user confirms, the card flips back to state 01 (Active · email on file) with the new token and the same recipient pre-filled, so the next action is one click away.
+        </div>
+      </div>
+    </section>
+
+    <!-- Closing summary -->
+    <section class="section">
+      <div class="frame" style="background: var(--color-bg-2);">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+          <div>
+            <div style="font: 500 11px/1 var(--font-family-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 8px;">Q1 · Customer didn't get it</div>
+            <div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.6;">
+              Click <strong style="color: var(--color-text-primary);">Send email</strong> (primary in state 01). Confirm dialog gives a chance to fix the address. Link stays the same.
+            </div>
+          </div>
+          <div>
+            <div style="font: 500 11px/1 var(--font-family-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 8px;">Q2 · Rename View link?</div>
+            <div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.6;">
+              <strong style="color: var(--color-text-primary);">No.</strong> Let the primary slot rotate by state instead. <code style="font: 500 12px var(--font-family-mono); background: var(--color-bg-3); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--color-border-subtle);">View details</code> remains as a stable secondary so power users can always inspect link/QR.
+            </div>
+          </div>
+          <div>
+            <div style="font: 500 11px/1 var(--font-family-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 8px;">Q3 · Regenerate behaviour</div>
+            <div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.6;">
+              Ghost in 01 &amp; 02 (avoid token churn) → <strong style="color: var(--color-text-primary);">Primary in 03</strong> (only valid repair). Always shows a confirm dialog naming who'll lose the old token.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

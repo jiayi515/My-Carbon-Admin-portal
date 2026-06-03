@@ -1,0 +1,288 @@
+openapi: 3.1.1
+
+info:
+title: Device Model API
+version: 1.0.0
+description: 设备型号管理接口
+
+tags:
+
+* name: Device Model
+  description: 设备型号管理
+
+paths:
+
+/device-models:
+get:
+tags:
+- Device Model
+summary: 获取型号列表
+parameters:
+- name: page
+in: query
+schema:
+type: integer
+
+```
+    - name: pageSize
+      in: query
+      schema:
+        type: integer
+
+    - name: modelName
+      in: query
+      schema:
+        type: string
+
+    - name: description
+      in: query
+      schema:
+        type: string
+
+    - name: operatingSystem
+      in: query
+      schema:
+        type: string
+
+  responses:
+    '200':
+      description: 查询成功
+
+post:
+  tags:
+    - Device Model
+  summary: 创建型号
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/CreateDeviceModelRequest'
+
+  responses:
+    '201':
+      description: 创建成功
+```
+
+/device-models/summary:
+get:
+tags:
+- Device Model
+summary: 获取型号汇总信息
+
+```
+  responses:
+    '200':
+      description: 查询成功
+```
+
+/device-models/export:
+get:
+tags:
+- Device Model
+summary: 导出型号列表
+
+```
+  parameters:
+    - name: modelName
+      in: query
+      schema:
+        type: string
+
+    - name: description
+      in: query
+      schema:
+        type: string
+
+    - name: operatingSystem
+      in: query
+      schema:
+        type: string
+
+  responses:
+    '200':
+      description: 导出成功
+```
+
+/device-models/{modelId}:
+get:
+tags:
+- Device Model
+summary: 获取型号详情
+
+```
+  parameters:
+    - name: modelId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    '200':
+      description: 查询成功
+
+patch:
+  tags:
+    - Device Model
+  summary: 修改型号
+
+  parameters:
+    - name: modelId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/UpdateDeviceModelRequest'
+
+  responses:
+    '200':
+      description: 修改成功
+
+delete:
+  tags:
+    - Device Model
+  summary: 删除型号
+
+  parameters:
+    - name: modelId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    '204':
+      description: 删除成功
+```
+
+components:
+
+schemas:
+
+```
+CreateDeviceModelRequest:
+  type: object
+  required:
+    - modelName
+    - operatingSystem
+    - orientation
+    - mainScreenSize
+    - mainResolution
+
+  properties:
+
+    modelName:
+      type: string
+      description: 型号名称
+
+    description:
+      type: string
+      description: 型号描述信息
+
+    operatingSystem:
+      type: string
+      description: 操作系统
+
+    orientation:
+      type: string
+      description: 横竖屏信息
+
+    mainScreenSize:
+      type: string
+      description: 主屏尺寸
+
+    mainResolution:
+      type: string
+      description: 主屏分辨率
+
+    subScreenSize:
+      type: string
+      description: 副屏尺寸
+
+    subResolution:
+      type: string
+      description: 副屏分辨率
+
+    logoUrl:
+      type: string
+      description: 型号LOGO
+
+UpdateDeviceModelRequest:
+  type: object
+
+  properties:
+
+    description:
+      type: string
+
+    orientation:
+      type: string
+
+    mainScreenSize:
+      type: string
+
+    mainResolution:
+      type: string
+
+    subScreenSize:
+      type: string
+
+    subResolution:
+      type: string
+
+    logoUrl:
+      type: string
+
+DeviceModel:
+  type: object
+
+  properties:
+
+    modelId:
+      type: string
+
+    modelName:
+      type: string
+
+    description:
+      type: string
+
+    operatingSystem:
+      type: string
+
+    orientation:
+      type: string
+
+    mainScreenSize:
+      type: string
+
+    mainResolution:
+      type: string
+
+    subScreenSize:
+      type: string
+
+    subResolution:
+      type: string
+
+    logoUrl:
+      type: string
+
+DeviceModelSummary:
+  type: object
+
+  properties:
+
+    operatingSystem:
+      type: string
+
+    count:
+      type: integer
+```
