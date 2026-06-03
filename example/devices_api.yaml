@@ -1,0 +1,537 @@
+openapi: 3.1.1
+
+info:
+  title: Device API
+  version: 1.0.0
+  description: 设备管理接口
+
+tags:
+  - name: Device
+    description: 设备管理
+
+paths:
+
+  /devices:
+    get:
+      tags:
+        - Device
+      summary: 获取设备列表
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+        - name: sn
+          in: query
+          description: 序列号，支持多值
+          schema:
+            type: string
+        - name: merchantId
+          in: query
+          schema:
+            type: string
+        - name: storeId
+          in: query
+          schema:
+            type: string
+        - name: model
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: operatingSystem
+          in: query
+          schema:
+            type: string
+        - name: firmwareOperator
+          in: query
+          description: 固件版本比较符（le / eq / ge）
+          schema:
+            type: string
+        - name: firmware
+          in: query
+          schema:
+            type: string
+        - name: imeiOrMac
+          in: query
+          description: IMEI 或 MAC，支持多值
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: active / inactive / pending
+          schema:
+            type: array
+            items:
+              type: string
+        - name: lastSeen
+          in: query
+          description: 5m / 1h / 24h / 7d / never
+          schema:
+            type: string
+        - name: activatedRange
+          in: query
+          schema:
+            type: string
+        - name: networkType
+          in: query
+          description: wifi / ethernet / cellular / offline
+          schema:
+            type: array
+            items:
+              type: string
+        - name: carrier
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: ssid
+          in: query
+          schema:
+            type: string
+        - name: ipCidr
+          in: query
+          schema:
+            type: string
+        - name: securityFlag
+          in: query
+          description: rooted / devMode / warnings
+          schema:
+            type: array
+            items:
+              type: string
+        - name: batteryMin
+          in: query
+          schema:
+            type: integer
+        - name: batteryMax
+          in: query
+          schema:
+            type: integer
+        - name: batteryHealth
+          in: query
+          schema:
+            type: string
+        - name: storageUsedMin
+          in: query
+          schema:
+            type: integer
+        - name: storageUsedMax
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 查询成功
+
+  /devices/summary:
+    get:
+      tags:
+        - Device
+      summary: 获取设备汇总信息
+      responses:
+        '200':
+          description: 查询成功
+
+  /devices/export:
+    get:
+      tags:
+        - Device
+      summary: 导出设备列表
+      parameters:
+        - name: sn
+          in: query
+          schema:
+            type: string
+        - name: merchantId
+          in: query
+          schema:
+            type: string
+        - name: storeId
+          in: query
+          schema:
+            type: string
+        - name: model
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: operatingSystem
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: 导出成功
+
+  /devices/{sn}:
+    get:
+      tags:
+        - Device
+      summary: 获取设备详情
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+
+  /devices/{sn}/apps-firmware:
+    get:
+      tags:
+        - Device
+      summary: 获取设备应用与固件信息
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+
+  /devices/{sn}/push/firmware:
+    post:
+      tags:
+        - Device
+      summary: 推送固件更新
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushFirmwareRequest'
+      responses:
+        '202':
+          description: 推送任务已排队
+
+  /devices/{sn}/push/apps:
+    post:
+      tags:
+        - Device
+      summary: 推送应用安装或更新
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushAppsRequest'
+      responses:
+        '202':
+          description: 推送任务已排队
+
+  /devices/{sn}/push-history:
+    get:
+      tags:
+        - Device
+      summary: 获取推送历史
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+
+  /devices/{sn}/monitoring:
+    get:
+      tags:
+        - Device
+      summary: 获取设备监控信息
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+
+  /devices/{sn}/monitoring/recollect:
+    post:
+      tags:
+        - Device
+      summary: 重新采集监控数据
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: 采集任务已排队
+
+  /devices/{sn}/prewarning:
+    get:
+      tags:
+        - Device
+      summary: 获取预警信息
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+    put:
+      tags:
+        - Device
+      summary: 配置预警策略
+      parameters:
+        - name: sn
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrewarningConfigRequest'
+      responses:
+        '200':
+          description: 配置成功
+
+components:
+
+  schemas:
+
+    PushFirmwareRequest:
+      type: object
+      required:
+        - targetVersion
+      properties:
+        targetVersion:
+          type: string
+          description: 目标固件版本
+
+    PushAppsRequest:
+      type: object
+      required:
+        - kind
+        - apps
+      properties:
+        kind:
+          type: string
+          description: install / update
+        silent:
+          type: boolean
+          description: 是否静默安装
+        apps:
+          type: array
+          items:
+            type: object
+            properties:
+              appId:
+                type: string
+              version:
+                type: string
+
+    PrewarningConfigRequest:
+      type: object
+      properties:
+        traffic:
+          $ref: '#/components/schemas/PrewarningPolicySetting'
+        geofence:
+          $ref: '#/components/schemas/PrewarningPolicySetting'
+        disk:
+          $ref: '#/components/schemas/PrewarningPolicySetting'
+
+    PrewarningPolicySetting:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        policyId:
+          type: string
+
+    Device:
+      type: object
+      properties:
+        sn:
+          type: string
+        model:
+          type: string
+        os:
+          type: string
+        firmware:
+          type: string
+        buildNumber:
+          type: string
+        state:
+          type: string
+          description: active / inactive / pending
+        createdAt:
+          type: string
+        activatedAt:
+          type: string
+        lastSeenAt:
+          type: string
+        merchantId:
+          type: string
+        storeId:
+          type: string
+        imei:
+          type: string
+        macAddress:
+          type: string
+        storage:
+          type: object
+          properties:
+            total:
+              type: number
+            used:
+              type: number
+        battery:
+          type: object
+          properties:
+            level:
+              type: integer
+            health:
+              type: string
+        hardware:
+          type: object
+          properties:
+            root:
+              type: boolean
+            devMode:
+              type: boolean
+            securityWarnings:
+              type: array
+              items:
+                type: string
+        network:
+          type: object
+          properties:
+            wifi:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                ssid:
+                  type: string
+            ethernet:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+            sim:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                carrier:
+                  type: string
+        settings:
+          type: object
+          properties:
+            timezone:
+              type: string
+            language:
+              type: string
+            autoTimezone:
+              type: boolean
+            autoTime:
+              type: boolean
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceApp'
+
+    DeviceApp:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        installedAt:
+          type: string
+        system:
+          type: boolean
+
+    DeviceSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        pending:
+          type: integer
+        securityFlagged:
+          type: integer
+
+    PushHistoryItem:
+      type: object
+      properties:
+        kind:
+          type: string
+          description: firmware / app-install / app-update / app-uninstall
+        target:
+          type: string
+        queuedAt:
+          type: string
+        status:
+          type: string
+          description: pending / completed / failed
+        completedAt:
+          type: string
+        by:
+          type: string
+        error:
+          type: string
+
+    PrewarningEvent:
+      type: object
+      properties:
+        policy:
+          type: string
+        kind:
+          type: string
+          description: traffic / geofence / disk
+        at:
+          type: string
+        level:
+          type: string
+          description: critical / warning / info
+        detail:
+          type: string
