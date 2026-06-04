@@ -207,48 +207,7 @@ paths:
         '200':
           description: 查询成功
 
-  /devices/{sn}/push/firmware:
-    post:
-      tags:
-        - Device
-      summary: 推送固件更新
-      parameters:
-        - name: sn
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PushFirmwareRequest'
-      responses:
-        '202':
-          description: 推送任务已排队
-
-  /devices/{sn}/push/apps:
-    post:
-      tags:
-        - Device
-      summary: 推送应用安装或更新
-      parameters:
-        - name: sn
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PushAppsRequest'
-      responses:
-        '202':
-          description: 推送任务已排队
-
+  
   /devices/{sn}/push-history:
     get:
       tags:
