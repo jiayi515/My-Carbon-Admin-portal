@@ -47,17 +47,6 @@
 授权: 任何管理员 · 适用 [可见范围 (Visible scope)]
 规则: 返回设备的推送历史（类型、目标、排队时间、状态、完成时间、操作人）。
 
-### pushFirmware
-实现: `pushFirmware` (api-spec.yaml — `PushFirmwareRequest`)
-授权: 任何管理员 · 适用 [可见范围 (Visible scope)]
-规则: 为设备排队下发 `targetVersion` 固件推送；在推送历史中记录为 `pending`。
-
-### pushApps
-实现: `pushApps` (api-spec.yaml — `PushAppsRequest`)
-授权: 任何管理员 · 适用 [可见范围 (Visible scope)]
-规则: 为所列 `apps` 排队下发安装/更新（`kind`），可选 `silent`（静默）；逐项记录到推送历史。
-对已安装的应用进行推送会覆盖安装。
-
 ### getDeviceMonitoring
 实现: `getDeviceMonitoring` (api-spec.yaml)
 授权: 任何管理员 · 适用 [可见范围 (Visible scope)]

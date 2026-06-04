@@ -129,6 +129,10 @@ paths:
       responses:
         '200':
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceListResponse'
 
   /devices/summary:
     get:
@@ -138,6 +142,10 @@ paths:
       responses:
         '200':
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceSummary'
 
   /devices/export:
     get:
@@ -176,6 +184,15 @@ paths:
       responses:
         '200':
           description: 导出成功
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
 
   /devices/{sn}:
     get:
@@ -191,6 +208,16 @@ paths:
       responses:
         '200':
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+        '404':
+          description: 设备不存在或超出可见范围
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /devices/{sn}/apps-firmware:
     get:
@@ -206,8 +233,11 @@ paths:
       responses:
         '200':
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceAppsFirmware'
 
-  
   /devices/{sn}/push-history:
     get:
       tags:
@@ -222,6 +252,12 @@ paths:
       responses:
         '200':
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PushHistoryItem'
 
   /devices/{sn}/monitoring:
     get:
@@ -237,6 +273,10 @@ paths:
       responses:
         '200':
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceMonitoring'
 
   /devices/{sn}/monitoring/recollect:
     post:
@@ -252,6 +292,10 @@ paths:
       responses:
         '202':
           description: 采集任务已排队
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskQueuedResponse'
 
   /devices/{sn}/prewarning:
     get:
@@ -267,6 +311,10 @@ paths:
       responses:
         '200':
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevicePrewarning'
     put:
       tags:
         - Device
@@ -286,10 +334,49 @@ paths:
       responses:
         '200':
           description: 配置成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrewarningConfig'
+        '400':
+          description: 策略标识无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 components:
 
   schemas:
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+          description: 符合条件的总记录数
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 错误码，例如 VALIDATION / NOT_FOUND
+        message:
+          type: string
+
+    TaskQueuedResponse:
+      type: object
+      properties:
+        taskId:
+          type: string
+        status:
+          type: string
+          description: 任务状态，例如 queued
 
     PushFirmwareRequest:
       type: object
@@ -342,6 +429,7 @@ components:
 
     Device:
       type: object
+      description: 设备列表行 / 基础信息
       properties:
         sn:
           type: string
@@ -364,11 +452,30 @@ components:
           type: string
         merchantId:
           type: string
+        merchantName:
+          type: string
         storeId:
+          type: string
+        storeName:
           type: string
         imei:
           type: string
         macAddress:
+          type: string
+        primaryNetworkType:
+          type: string
+          description: 派生字段：wifi / ethernet / cellular / offline
+        ipAddress:
+          type: string
+        signal:
+          type: integer
+          description: 派生字段：信号强度
+        online:
+          type: boolean
+          description: 派生字段：在线状态
+        carrier:
+          type: string
+        ssid:
           type: string
         storage:
           type: object
@@ -395,57 +502,95 @@ components:
               type: array
               items:
                 type: string
-        network:
-          type: object
-          properties:
-            wifi:
-              type: object
-              properties:
-                enabled:
-                  type: boolean
-                ssid:
-                  type: string
-            ethernet:
-              type: object
-              properties:
-                enabled:
-                  type: boolean
-            sim:
-              type: object
-              properties:
-                enabled:
-                  type: boolean
-                carrier:
-                  type: string
-        settings:
-          type: object
-          properties:
-            timezone:
-              type: string
-            language:
-              type: string
-            autoTimezone:
-              type: boolean
-            autoTime:
-              type: boolean
-        apps:
-          type: array
-          items:
-            $ref: '#/components/schemas/DeviceApp'
+        appCount:
+          type: integer
 
-    DeviceApp:
+    DeviceDetail:
+      allOf:
+        - $ref: '#/components/schemas/Device'
+        - type: object
+          description: 设备详情，含部署、网络、系统、硬件态势、定位等
+          properties:
+            vendor:
+              type: string
+              description: 派生字段：厂商
+            partNumber:
+              type: string
+              description: 派生字段：料号
+            hardwareId:
+              type: string
+            hardwareCode:
+              type: string
+              description: 配置码
+            lastBootAt:
+              type: string
+              description: 最近开机时间
+            integrityWarning:
+              type: boolean
+              description: 当 root / devMode / 安全告警时为 true
+            relatedTicketCount:
+              type: integer
+            address:
+              type: string
+            network:
+              type: object
+              properties:
+                wifi:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    ssid:
+                      type: string
+                ethernet:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    connected:
+                      type: boolean
+                sim:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    carrier:
+                      type: string
+            settings:
+              type: object
+              properties:
+                timezone:
+                  type: string
+                language:
+                  type: string
+                autoTimezone:
+                  type: boolean
+                autoTime:
+                  type: boolean
+            location:
+              type: object
+              properties:
+                city:
+                  type: string
+                address:
+                  type: string
+                lat:
+                  type: number
+                lng:
+                  type: number
+                placeholder:
+                  type: boolean
+                  description: 待激活或离线设备以占位方式展示
+
+    DeviceListResponse:
       type: object
       properties:
-        id:
-          type: string
-        name:
-          type: string
-        version:
-          type: string
-        installedAt:
-          type: string
-        system:
-          type: boolean
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
 
     DeviceSummary:
       type: object
@@ -458,6 +603,220 @@ components:
           type: integer
         securityFlagged:
           type: integer
+          description: 已 Root / 开发者模式 / 存在告警的设备数
+
+    DeviceApp:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        installedAt:
+          type: string
+        source:
+          type: string
+          description: 来源
+        system:
+          type: boolean
+
+    FirmwareInfo:
+      type: object
+      properties:
+        version:
+          type: string
+        buildNumber:
+          type: string
+        releaseNotes:
+          type: string
+        behindCount:
+          type: integer
+          description: 当前固件落后目标固件的版本数
+
+    AppComplianceSummary:
+      type: object
+      properties:
+        required:
+          type: integer
+        installed:
+          type: integer
+        missing:
+          type: integer
+        outdated:
+          type: integer
+
+    MissingApp:
+      type: object
+      properties:
+        appId:
+          type: string
+        name:
+          type: string
+        requiredVersion:
+          type: string
+
+    OutdatedApp:
+      type: object
+      properties:
+        appId:
+          type: string
+        name:
+          type: string
+        currentVersion:
+          type: string
+        requiredVersion:
+          type: string
+
+    DeviceAppsFirmware:
+      type: object
+      properties:
+        currentFirmware:
+          $ref: '#/components/schemas/FirmwareInfo'
+        targetFirmware:
+          $ref: '#/components/schemas/FirmwareInfo'
+        compliance:
+          $ref: '#/components/schemas/AppComplianceSummary'
+        missingApps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MissingApp'
+        outdatedApps:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutdatedApp'
+        installedApps:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceApp'
+
+    DeviceMonitoring:
+      type: object
+      properties:
+        collectedAt:
+          type: string
+          description: 数据采集时间
+        stale:
+          type: boolean
+          description: 采集时间超过新鲜度阈值时为 true
+        security:
+          type: object
+          properties:
+            tamperState:
+              type: string
+            attackCount:
+              type: integer
+            root:
+              type: boolean
+            uptime:
+              type: object
+              additionalProperties:
+                type: integer
+        network:
+          type: object
+          properties:
+            wifi:
+              type: object
+              properties:
+                connected:
+                  type: boolean
+                ssid:
+                  type: string
+            cellular:
+              type: object
+              properties:
+                connected:
+                  type: boolean
+                apn:
+                  type: string
+            ethernet:
+              type: object
+              properties:
+                connected:
+                  type: boolean
+            bluetooth:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+        location:
+          type: object
+          properties:
+            gpsState:
+              type: string
+            lat:
+              type: number
+            lng:
+              type: number
+            fixRate:
+              type: number
+        simTraffic:
+          type: object
+          description: 仅启用 SIM 时返回
+          properties:
+            used:
+              type: number
+            total:
+              type: number
+        systemSettings:
+          type: object
+          properties:
+            language:
+              type: string
+            timezone:
+              type: string
+            inputMethod:
+              type: string
+            screenTimeout:
+              type: integer
+            brightness:
+              type: integer
+            volume:
+              type: integer
+        systemStatus:
+          type: object
+          properties:
+            kioskLocked:
+              type: boolean
+            statusBarPullDown:
+              type: boolean
+            unattended:
+              type: boolean
+            developUnit:
+              type: boolean
+        eventLog:
+          type: array
+          items:
+            type: object
+            properties:
+              at:
+                type: string
+              kind:
+                type: string
+                description: boot / app-install / app-update / app-uninstall / network-change
+              detail:
+                type: string
+
+    PrewarningConfig:
+      type: object
+      properties:
+        traffic:
+          $ref: '#/components/schemas/PrewarningPolicySetting'
+        geofence:
+          $ref: '#/components/schemas/PrewarningPolicySetting'
+        disk:
+          $ref: '#/components/schemas/PrewarningPolicySetting'
+
+    DevicePrewarning:
+      type: object
+      properties:
+        config:
+          $ref: '#/components/schemas/PrewarningConfig'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrewarningEvent'
 
     PushHistoryItem:
       type: object
